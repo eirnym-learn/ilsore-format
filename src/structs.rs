@@ -7,45 +7,24 @@ pub struct StatusOptions {
 }
 
 #[derive(Debug)]
-pub struct HeadOptions {
-    pub(crate) head_name: Option<String>,
-    pub(crate) head_oid: Option<String>, // Short oid
-    pub(crate) head_detached: bool,
+pub struct HeadInfo {
+    pub(crate) full_name: Option<String>,
+    pub(crate) name: Option<String>,
+    pub(crate) oid: Option<String>, // Short oid
+    pub(crate) detached: bool,
 }
 
 #[derive(Debug)]
-pub struct OutputStatus {
-    untracked: bool,
-    ignored: bool,
-    unreadable: bool,
+pub struct FileStatus {
+    pub(crate) conflict: bool,
+    pub(crate) untracked: bool,
+    pub(crate) typechange: bool,
+    pub(crate) unstaged: bool,
+    pub(crate) staged: bool,
 }
 
 #[derive(Debug)]
 pub struct OutputOptions {
-    is_repo: bool,
-    head_options: Option<HeadOptions>,
-    output_status: OutputStatus,
+    head_options: Option<HeadInfo>,
+    file_status: Option<FileStatus>,
 }
-
-// impl HeadOptions {
-//     pub fn new2(head_name: Option<String>, head_oid: Option<String>, head_detached: bool) -> Self {
-//         HeadOptions {
-//             head_name: match head_name {
-//                 None => None,
-//                 Some(head_name) => Some(head_name.to_string()),
-//             },
-//             head_oid: match head_oid {
-//                 None => None,
-//                 Some(head_oid) => Some(head_oid.to_string()),
-//             },
-//             head_detached,
-//         }
-//     }
-//     pub fn head_name(&self) -> Option<&str> {
-//         return self.head_name.as_deref();
-//     }
-
-//     pub fn head_detached(&self) -> bool {
-//         self.head_detached
-//     }
-// }
