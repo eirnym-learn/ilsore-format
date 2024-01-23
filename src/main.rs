@@ -2,8 +2,14 @@ use std::env;
 use std::io;
 use std::path;
 
+mod error;
 mod structs;
+use error::Error;
 use structs::HeadOptions;
+
+
+type Result<T, E = error::Error> = std::result::Result<T, E>;
+
 
 fn to_short_hex_oid(oid: &[u8]) -> String {
     return oid[1..8]
@@ -18,10 +24,7 @@ fn print_type_of<T>(_: &T) {
 }
 
 fn git_subfolder() -> io::Result<Option<path::PathBuf>> {
-    let path = match env::current_dir() {
-        Ok(path) => path,
-        Err(e) => return Err(e),
-    };
+    let path = env::current_dir()?;
     for sub_path in path.ancestors() {
         let folder = sub_path.join(".git");
         if folder.exists() {
@@ -31,23 +34,23 @@ fn git_subfolder() -> io::Result<Option<path::PathBuf>> {
     return Ok(None);
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<()> {
     let p = path::Path::new("refs/heads/main");
     let name = p.file_name().unwrap();
     print_type_of(&name);
     println!("head: {:?}", p.file_name().unwrap());
-    let _ = process_current_dir();
+    let _ = process_current_dir()?;
     Ok(())
 }
 
-fn process_current_dir() -> std::io::Result<()> {
-    let git_dir_buf = match git_subfolder() {
-        Err(e) => panic!("Unable to find current directory {:?}", e),
-        Ok(git_dir_opt) => match git_dir_opt {
-            None => return Ok(()), // TODO: How to return error here?
-            Some(git_dir_buf) => git_dir_buf,
-        },
-    };
+
+
+
+
+fn process_current_dir() -> Result<(), Error> {
+	 let git_dir_buf = git_subfolder()?.ok_or_else(|| Error::Message("Not found .git folder".to_string()))?;
+
+
 
     print_type_of(&git_dir_buf);
     println!(
@@ -59,7 +62,7 @@ fn process_current_dir() -> std::io::Result<()> {
     Ok(())
 }
 
-fn head_info(repo: git2::Repository) -> Option<structs::HeadOptions> {
+fn head_info(repo: git2::Repository) -> Option<HeadOptions> {
     let head = match repo.head() {
         Err(_) => return None,
         Ok(head) => head,
@@ -70,9 +73,9 @@ fn head_info(repo: git2::Repository) -> Option<structs::HeadOptions> {
     let is_detached = repo.head_detached().ok().unwrap_or_default();
     let oid = head.target();
 
-    Some(structs::HeadOptions::new2 {
-        head_name: head.shorthand(),
-        head_oid: oid,
+    Some(HeadOptions {
+        head_name: head.shorthand().map(|oid|oid.to_string()),
+        head_oid: oid.map(|oid|oid.to_string()),
         head_detached: is_detached,
     })
 }
