@@ -8,8 +8,7 @@ pub struct StatusOptions {
 
 #[derive(Debug)]
 pub struct HeadInfo {
-    pub(crate) full_name: Option<String>,
-    pub(crate) name: Option<String>,
+    pub(crate) reference: Option<String>,
     pub(crate) oid: Option<git2::Oid>, // Short oid
     pub(crate) detached: bool,
 }
