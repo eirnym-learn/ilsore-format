@@ -1,8 +1,27 @@
+pub(crate) static mut VERBOSE_ERRORS: bool = true;
+
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Io(std::io::Error),
     Git(git2::Error),
     Message(String),
+}
+
+pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
+
+pub(crate) fn error_control<T, E: std::fmt::Debug>(result: Result<T, E>) -> Result<Option<T>> {
+    if result.is_ok() {
+        return Ok(result.ok());
+    }
+
+    let err: E = result.err().unwrap();
+    unsafe {
+        if VERBOSE_ERRORS == true {
+            println!("{:?}", err);
+        }
+    }
+
+    return Ok(None);
 }
 
 impl From<std::io::Error> for Error {
