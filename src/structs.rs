@@ -10,7 +10,7 @@ pub struct StatusOptions {
 pub struct HeadInfo {
     pub(crate) full_name: Option<String>,
     pub(crate) name: Option<String>,
-    pub(crate) oid: Option<String>, // Short oid
+    pub(crate) oid: Option<git2::Oid>, // Short oid
     pub(crate) detached: bool,
 }
 

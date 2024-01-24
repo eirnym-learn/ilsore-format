@@ -23,12 +23,6 @@ fn git_subfolder() -> io::Result<Option<path::PathBuf>> {
 }
 
 fn main() -> Result<()> {
-    /*
-    let p = path::Path::new("refs/heads/main");
-    let name = p.file_name().unwrap();
-    print_type_of(&name);
-    println!("head: {:?}", p.file_name().unwrap());
-    */
     let _ = process_current_dir()?;
     Ok(())
 }
@@ -50,13 +44,17 @@ fn process_repo(path: &path::PathBuf) -> Result<()> {
     let repo = git2::Repository::open(path)?;
     let head = head_info(&repo)?;
     let file_status = file_status(&repo)?;
-    print_type_of(&head);
 
     println!("head info: {:?}", head);
     println!("file status: {:?}", file_status);
-    let tracking_branch = repo.branch_upstream_name(head.unwrap().full_name.as_deref().unwrap())?;
+
+    print_type_of(&head);
+    // let full_name = head.map(|h| h.full_name);
+    let branch_ahead_behind: Option<(usize, usize)> = graph_ahead_behind(&repo, &head)?;
+
+    print_type_of(&branch_ahead_behind);
+    // println("branch_ahead_behind: {:?}", branch_ahead_behind);
     //    graph_ahead_behind(
-    println!("branch: {:?}", tracking_branch.as_str());
     Ok(())
 }
 
@@ -68,7 +66,7 @@ fn head_info(repo: &git2::Repository) -> Result<Option<structs::HeadInfo>> {
     Ok(Some(structs::HeadInfo {
         full_name: head.name().map(|oid| oid.to_string()),
         name: head.shorthand().map(|oid| oid.to_string()),
-        oid: oid.map(|oid| oid.to_string()),
+        oid,
         detached: is_detached,
     }))
 }
@@ -113,6 +111,7 @@ fn file_status(repo: &git2::Repository) -> Result<structs::FileStatus> {
             _ => (),
         }
     }
+
     Ok(structs::FileStatus {
         conflict,
         untracked,
@@ -120,4 +119,34 @@ fn file_status(repo: &git2::Repository) -> Result<structs::FileStatus> {
         unstaged,
         staged,
     })
+}
+
+fn graph_ahead_behind(
+    repo: &git2::Repository,
+    head: &Option<structs::HeadInfo>,
+) -> Result<Option<(usize, usize)>> {
+    let full_name: Option<&String> = head.as_ref().map_or_else(|| None, |h| h.full_name.as_ref());
+    let head_oid: Option<&git2::Oid> = head.as_ref().map_or_else(|| None, |h| h.oid.as_ref());
+
+    if full_name.is_none() || head_oid.is_none() {
+        return Ok(None);
+    }
+
+    let tracking_branch_buf = repo.branch_upstream_name(full_name.as_deref().unwrap())?;
+    let tracking_branch = tracking_branch_buf.as_str();
+    if tracking_branch.is_none() {
+        return Err("tracking branch can't be converted to an UTF-8 string".into());
+    }
+    print_type_of(&tracking_branch);
+    println!("tracking branch is {:?}", tracking_branch);
+    let tracking_reference = repo.find_reference(tracking_branch.unwrap())?;
+    let tracking_oid = tracking_reference.target();
+    if (tracking_oid.is_none()) {
+        return Err("tracking branch {:?} has no oid".into());
+    }
+    let ahead_behind =
+        repo.graph_ahead_behind(*head_oid.as_deref().unwrap(), tracking_oid.unwrap())?;
+    println!("ahead-behind: {:?}", ahead_behind);
+
+    Ok(Some((0, 0)))
 }
