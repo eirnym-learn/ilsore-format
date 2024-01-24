@@ -3,6 +3,7 @@ pub enum Error {
     Io(std::io::Error),
     Git(git2::Error),
     Message(String),
+    Ignore,
 }
 
 impl From<std::io::Error> for Error {
@@ -35,6 +36,7 @@ impl std::error::Error for Error {
             Error::Io(err) => Some(err),
             Error::Git(err) => Some(err),
             Error::Message(_) => None,
+            Error::Ignore => None,
         }
     }
 }
@@ -45,6 +47,7 @@ impl std::fmt::Display for Error {
             Error::Io(err) => err.fmt(f),
             Error::Git(err) => err.fmt(f),
             Error::Message(err) => err.fmt(f),
+            Error::Ignore => "".fmt(f),
         }
     }
 }

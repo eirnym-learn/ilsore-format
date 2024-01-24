@@ -25,6 +25,7 @@ pub struct FileStatus {
 
 #[derive(Debug)]
 pub struct OutputOptions {
-    head_options: Option<HeadInfo>,
-    file_status: Option<FileStatus>,
+    pub(crate) head_info: Option<HeadInfo>,
+    pub(crate) file_status: Option<FileStatus>,
+    pub(crate) branch_ahead_behind: Option<(usize, usize)>,
 }

@@ -7,6 +7,8 @@ mod structs;
 
 type Result<T, E = error::Error> = std::result::Result<T, E>;
 
+static mut VERBOSE_ERRORS: bool = false;
+
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
@@ -23,52 +25,64 @@ fn git_subfolder() -> io::Result<Option<path::PathBuf>> {
 }
 
 fn main() -> Result<()> {
-    let _ = process_current_dir()?;
+    let a = error_control(process_current_dir())?;
+    println!("{:?}", a);
     Ok(())
 }
 
-fn process_current_dir() -> Result<(), error::Error> {
+fn error_control<T, E: std::fmt::Debug>(result: Result<T, E>) -> Result<Option<T>> {
+    if result.is_ok() {
+        return Ok(result.ok());
+    }
+
+    unsafe {
+        if VERBOSE_ERRORS == true {
+            println!("{:?}", result.err().unwrap());
+        }
+    }
+
+    return Ok(None);
+}
+
+fn unwrap_double_option<T>(value: Option<Option<T>>) -> Option<T> {
+    return value.map_or_else(|| None, |a| a);
+}
+fn process_current_dir() -> Result<structs::OutputOptions> {
     let git_dir_buf = git_subfolder()?
         .ok_or_else(|| error::Error::Message("Not found .git folder".to_string()))?;
 
-    println!(
-        "Folder {:?} is repo: {:?}",
-        git_dir_buf,
-        git_dir_buf.exists()
-    );
-    process_repo(&git_dir_buf)?;
-    Ok(())
+    return process_repo(&git_dir_buf);
 }
 
-fn process_repo(path: &path::PathBuf) -> Result<()> {
+fn process_repo(path: &path::PathBuf) -> Result<structs::OutputOptions> {
     let repo = git2::Repository::open(path)?;
-    let head = head_info(&repo)?;
-    let file_status = file_status(&repo)?;
+    let head_info = error_control(head_info(&repo))?;
+    let file_status = error_control(file_status(&repo))?;
+    let branch_ahead_behind =
+        unwrap_double_option(error_control(graph_ahead_behind(&repo, &head_info))?);
 
-    println!("head info: {:?}", head);
-    println!("file status: {:?}", file_status);
-
-    print_type_of(&head);
-    // let full_name = head.map(|h| h.full_name);
-    let branch_ahead_behind: Option<(usize, usize)> = graph_ahead_behind(&repo, &head)?;
-
-    print_type_of(&branch_ahead_behind);
-    // println("branch_ahead_behind: {:?}", branch_ahead_behind);
-    //    graph_ahead_behind(
-    Ok(())
+    Ok(structs::OutputOptions {
+        head_info,
+        file_status,
+        branch_ahead_behind,
+    })
 }
 
-fn head_info(repo: &git2::Repository) -> Result<Option<structs::HeadInfo>> {
-    let head = repo.head()?;
+fn head_info(repo: &git2::Repository) -> Result<structs::HeadInfo> {
+    let head_result = error_control(repo.head())?;
+    if head_result.is_none() {
+        return Err(error::Error::Ignore);
+    }
+    let head = head_result.unwrap();
     let is_detached = repo.head_detached().ok().unwrap_or_default();
     let oid = head.target();
 
-    Ok(Some(structs::HeadInfo {
+    Ok(structs::HeadInfo {
         full_name: head.name().map(|oid| oid.to_string()),
         name: head.shorthand().map(|oid| oid.to_string()),
         oid,
         detached: is_detached,
-    }))
+    })
 }
 
 fn file_status(repo: &git2::Repository) -> Result<structs::FileStatus> {
@@ -141,12 +155,11 @@ fn graph_ahead_behind(
     println!("tracking branch is {:?}", tracking_branch);
     let tracking_reference = repo.find_reference(tracking_branch.unwrap())?;
     let tracking_oid = tracking_reference.target();
-    if (tracking_oid.is_none()) {
+    if tracking_oid.is_none() {
         return Err("tracking branch {:?} has no oid".into());
     }
     let ahead_behind =
         repo.graph_ahead_behind(*head_oid.as_deref().unwrap(), tracking_oid.unwrap())?;
     println!("ahead-behind: {:?}", ahead_behind);
-
-    Ok(Some((0, 0)))
+    return Ok(Some(ahead_behind));
 }
