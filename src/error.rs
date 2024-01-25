@@ -1,4 +1,4 @@
-pub(crate) static mut VERBOSE_ERRORS: bool = true;
+pub(crate) static VERBOSE_ERRORS: bool = true;
 
 #[derive(Debug)]
 pub(crate) enum Error {
@@ -9,16 +9,18 @@ pub(crate) enum Error {
 
 pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
 
-pub(crate) fn error_control<T, E: std::fmt::Debug>(result: Result<T, E>) -> Result<Option<T>> {
+pub(crate) fn error_control<T, E: std::error::Error>(result: Result<T, E>) -> Result<Option<T>> {
     if result.is_ok() {
         return Ok(result.ok());
     }
 
     let err: E = result.err().unwrap();
-    unsafe {
-        if VERBOSE_ERRORS == true {
-            println!("{:?}", err);
-        }
+    if VERBOSE_ERRORS == true {
+        println!("{:?}", err);
+        println!("{:#}", err);
+        println!("{:}", err);
+
+        err.source().map(|err| println!("{:}", err));
     }
 
     return Ok(None);
@@ -65,5 +67,55 @@ impl std::fmt::Display for Error {
             Error::Git(err) => err.fmt(f),
             Error::Message(err) => err.fmt(f),
         }
+    }
+}
+
+pub trait LogError {
+    fn log(&self);
+}
+
+impl<T> LogError for T
+where
+    T: std::error::Error,
+{
+    /// Prints the error message to the console.
+    ///
+    /// Example:
+    /// ```ignore
+    /// use error::LogError;
+    ///
+    /// err.log();
+    /// ```
+    fn log(&self) {
+        if VERBOSE_ERRORS == true {
+            println!(":? {self:?}");
+            println!(":# {self:#}");
+            println!(":  {self:}");
+        }
+    }
+}
+
+pub trait MapLog {
+    fn map_log(self) -> Self;
+}
+
+impl<T, E> MapLog for Result<T, E>
+where
+    E: std::error::Error,
+{
+    /// Prints the error message to the console if result is an error.
+	 /// Works ordinary as `map_err` function with print.
+    ///
+    /// Example:
+    /// ```ignore
+    /// use error::MapLog;
+    ///
+    /// result.map_log();
+    /// ```
+    fn map_log(self) -> Self {
+        self.map_err(|err| {
+            err.log();
+            err
+        })
     }
 }
