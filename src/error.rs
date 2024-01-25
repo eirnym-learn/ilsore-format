@@ -1,3 +1,4 @@
+/// Flag if error required
 pub(crate) static VERBOSE_ERRORS: bool = true;
 
 #[derive(Debug)]
@@ -8,23 +9,6 @@ pub(crate) enum Error {
 }
 
 pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
-
-pub(crate) fn error_control<T, E: std::error::Error>(result: Result<T, E>) -> Result<Option<T>> {
-    if result.is_ok() {
-        return Ok(result.ok());
-    }
-
-    let err: E = result.err().unwrap();
-    if VERBOSE_ERRORS == true {
-        println!("{:?}", err);
-        println!("{:#}", err);
-        println!("{:}", err);
-
-        err.source().map(|err| println!("{:}", err));
-    }
-
-    return Ok(None);
-}
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
@@ -87,24 +71,24 @@ where
     /// err.log();
     /// ```
     fn log(&self) {
-        if VERBOSE_ERRORS == true {
-            println!(":? {self:?}");
-            println!(":# {self:#}");
-            println!(":  {self:}");
+        if VERBOSE_ERRORS {
+            eprintln!(":  {self:}");
         }
     }
 }
 
-pub trait MapLog {
-    fn map_log(self) -> Self;
+pub trait MapLog<T> {
+    fn map_log(self) -> Option<T>;
 }
 
-impl<T, E> MapLog for Result<T, E>
+impl<T, E> MapLog<T> for Result<T, E>
 where
     E: std::error::Error,
 {
     /// Prints the error message to the console if result is an error.
-	 /// Works ordinary as `map_err` function with print.
+    /// Works ordinary as `map_err` function with print.
+    ///
+    /// Returns an option for ok result.
     ///
     /// Example:
     /// ```ignore
@@ -112,10 +96,10 @@ where
     ///
     /// result.map_log();
     /// ```
-    fn map_log(self) -> Self {
-        self.map_err(|err| {
+    fn map_log(self) -> Option<T> {
+        let _ = self.as_ref().map_err(|err| {
             err.log();
-            err
-        })
+        });
+        self.ok()
     }
 }
