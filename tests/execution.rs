@@ -2,19 +2,25 @@
 
 use std::env;
 use std::ops::Not;
-use std::path::Path;
 use std::process::Command;
 
-pub fn bin_path() -> &'static Path {
-    const BIN_PATH: &'static str = env!("CARGO_BIN_EXE_upfind");
-    Path::new(BIN_PATH)
-}
+mod common;
+use common::*;
 
 #[test]
 fn help() -> Result<(), Box<dyn std::error::Error>> {
+    // create environment for this teat
+    let path = {
+        let p = tmp_for("help")?;
+        // TODO: create inner files
+        // std::fs::create_dir(&p.join(".git"))?;
+        p
+    };
+
     let result = Command::new(bin_path())
         .arg("help")
-        .current_dir(env::current_dir()?)
+        //   .current_dir(env::current_dir()?)
+        .current_dir(path)
         .output()?;
 
     assert!(result.status.success()); // check exit code
