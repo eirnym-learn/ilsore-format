@@ -78,7 +78,7 @@ where
 }
 
 pub trait MapLog<T> {
-    fn map_log(self) -> Option<T>;
+    fn ok_or_log(self) -> Option<T>;
 }
 
 impl<T, E> MapLog<T> for Result<T, E>
@@ -96,7 +96,7 @@ where
     ///
     /// result.map_log();
     /// ```
-    fn map_log(self) -> Option<T> {
+    fn ok_or_log(self) -> Option<T> {
         let _ = self.as_ref().map_err(|err| {
             err.log();
         });

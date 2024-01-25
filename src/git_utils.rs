@@ -47,9 +47,9 @@ fn process_repo(
         return Err(error::Error::from(repo_opt.err().unwrap()));
     }
     let repo = repo_opt.unwrap();
-    let head_info = head_info(&repo, options).map_log();
-    let file_status = file_status(&repo, options).map_log();
-    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).map_log();
+    let head_info = head_info(&repo, options).ok_or_log();
+    let file_status = file_status(&repo, options).ok_or_log();
+    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).ok_or_log();
 
     Ok(structs::OutputOptions {
         head_info,
@@ -72,7 +72,7 @@ fn head_info(
             detached,
         },
         Some(git2::ReferenceType::Symbolic) => {
-            let reference_resolved = reference.resolve().map_log();
+            let reference_resolved = reference.resolve().ok_or_log();
             structs::HeadInfo {
                 reference: reference.symbolic_target().map(|v| String::from(v)),
                 oid: reference_resolved.map(|r| r.target()).flatten(),
