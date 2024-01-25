@@ -2,6 +2,7 @@ use std::env;
 use std::path;
 
 use crate::error;
+use crate::error::MapLog;
 use crate::error::Result;
 use crate::structs;
 
@@ -46,9 +47,9 @@ fn process_repo(
         return Err(error::Error::from(repo_opt.err().unwrap()));
     }
     let repo = repo_opt.unwrap();
-    let head_info = error::error_control(head_info(&repo, options))?;
-    let file_status = error::error_control(file_status(&repo, options))?;
-    let branch_ahead_behind = error::error_control(graph_ahead_behind(&repo, &head_info))?;
+    let head_info = head_info(&repo, options).map_log().ok();
+    let file_status = file_status(&repo, options).map_log().ok();
+    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).map_log().ok();
 
     Ok(structs::OutputOptions {
         head_info,

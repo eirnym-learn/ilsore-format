@@ -1,3 +1,5 @@
+use error::MapLog;
+
 mod error;
 mod git_utils;
 mod structs;
@@ -12,9 +14,7 @@ fn main() -> Result<()> {
         .map(|v| v.strip_prefix("refs/heads/").unwrap_or(v))
         .map(|v| String::from(v));
 
-    let a = error::error_control(git_utils::process_current_dir(
-        &structs::GetGitInfoOptions::new(),
-    ))?;
+    let a = git_utils::process_current_dir(&structs::GetGitInfoOptions::new()).map_log()?;
     println!("{:?}", a);
     Ok(())
 }
