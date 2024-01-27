@@ -3,6 +3,7 @@ name: Wait all checks
 on:
   pull_request:
     types: [assigned, opened, synchronize, reopened]
+  workflow_call:
 
 jobs:
   wait-all-checks:
