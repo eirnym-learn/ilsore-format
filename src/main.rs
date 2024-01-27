@@ -1,13 +1,21 @@
 use error::MapLog;
+use std::env;
 
 mod error;
 mod git_utils;
 mod structs;
 mod util;
 
-type Result<T, E = error::Error> = std::result::Result<T, E>;
+fn main() -> error::Result<()> {
+    let _ = error::APP_NAME.get_or_init(|| {
+        env::current_exe()
+            .map_or_else(
+                |_| Some(env!("CARGO_BIN_NAME").to_string()),
+                |p| p.file_stem().map(|s| s.to_string_lossy().to_string()),
+            )
+            .expect("filename by env")
+    });
 
-fn main() -> Result<()> {
     let full_name = Some(String::from("hello world"));
     let short_name: Option<String> = full_name
         .as_ref()

@@ -1,3 +1,7 @@
+use std::sync::OnceLock;
+
+pub(crate) static APP_NAME: OnceLock<String> = OnceLock::new();
+
 /// Flag if error required
 pub(crate) static VERBOSE_ERRORS: bool = true;
 
@@ -72,7 +76,8 @@ where
     /// ```
     fn log(&self) {
         if VERBOSE_ERRORS {
-            eprintln!(":  {self:}");
+            let app_name = APP_NAME.get().unwrap();
+            eprintln!("{app_name}:  {self:}");
         }
     }
 }
