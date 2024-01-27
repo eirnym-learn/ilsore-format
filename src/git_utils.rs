@@ -7,7 +7,7 @@ use crate::error;
 use crate::error::MapLog;
 use crate::error::Result;
 use crate::structs;
-use crate::util;
+use crate::util::LastPart;
 
 pub(crate) fn process_current_dir(
     options: &structs::GetGitInfoOptions,
@@ -78,7 +78,7 @@ fn head_info(
             let symbolic_target = reference.symbolic_target();
             let reference_name = symbolic_target.map(|v| String::from(v));
             let reference_short = symbolic_target
-                .map(|v| util::last_part(v))
+                .map(|v| v.last_part())
                 .map(|v| String::from(v));
 
             structs::HeadInfo {
@@ -92,7 +92,7 @@ fn head_info(
             let symbolic_target = reference.symbolic_target();
             let reference_name = symbolic_target.map(|v| String::from(v));
             let reference_short = symbolic_target
-                .map(|v| util::last_part(v))
+                .map(|v| v.last_part())
                 .map(|v| String::from(v));
 
             structs::HeadInfo {

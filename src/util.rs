@@ -2,23 +2,29 @@ pub(crate) fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
 
-pub(crate) fn last_part<'a>(value: &'a str) -> &'a str {
-    let index = value.rfind('/').map_or_else(|| 0, |idx| idx + 1);
-    &value[index..value.len()]
+pub(crate) trait LastPart {
+    fn last_part(&self) -> &Self;
+    fn last_two_parts(&self) -> &Self;
 }
 
-pub(crate) fn path_last_two_parts<'a>(value: &'a str) -> &'a str {
-    let first_idx = value.rfind('/').unwrap_or(value.len());
-    let second_idx = value[0..first_idx]
-        .rfind('/')
-        .map_or_else(|| 0, |idx| idx + 1);
-    &value[second_idx..value.len()]
+impl LastPart for str {
+    fn last_part(&self) -> &str {
+        let index = self.rfind('/').map_or_else(|| 0, |idx| idx + 1);
+        &self[index..self.len()]
+    }
+
+    fn last_two_parts(&self) -> &str {
+        let first_idx = self.rfind('/').unwrap_or(self.len());
+        let second_idx = self[0..first_idx]
+            .rfind('/')
+            .map_or_else(|| 0, |idx| idx + 1);
+        &self[second_idx..self.len()]
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::last_part;
-    use super::path_last_two_parts;
+    use super::LastPart;
     use rstest::rstest;
 
     #[rstest]
@@ -27,7 +33,7 @@ mod test {
     #[case("/a", "a")]
     #[case("a/b", "b")]
     fn last_part_test(#[case] value: &str, #[case] expected: &str) {
-        assert_eq!(last_part(value), expected);
+        assert_eq!(value.last_part(), expected);
     }
 
     #[rstest]
@@ -38,6 +44,6 @@ mod test {
     #[case("/a/b", "a/b")]
     #[case("c/a/b", "a/b")]
     fn last_last_two_parts_test(#[case] value: &str, #[case] expected: &str) {
-        assert_eq!(path_last_two_parts(value), expected);
+        assert_eq!(value.last_two_parts(), expected);
     }
 }
