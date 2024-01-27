@@ -45,9 +45,20 @@ fn process_repo(
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
     let repo = git2::Repository::open(path)?;
-    let head_info = head_info(&repo, options).ok_or_log();
+    let head_info_internal = head_info(&repo, options).ok_or_log();
     let file_status = file_status(&repo, options).ok_or_log();
-    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).ok_or_log();
+    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info_internal).ok_or_log();
+
+    let head_info = head_info_internal.map(|h| {
+        let reference_short = h.reference_name.map(|v| v.as_str().last_part().to_string());
+        let oid_short = h.oid.map(|v| v.to_string()[0..8].to_string());
+
+        structs::GitHeadInfo {
+            reference_short,
+            oid_short,
+            detached: h.detached,
+        }
+    });
 
     Ok(structs::GitOutputOptions {
         head_info,
@@ -56,55 +67,45 @@ fn process_repo(
     })
 }
 
+#[derive(Debug)]
+struct GitHeadInfoInternal {
+    pub reference_name: Option<String>,
+    pub oid: Option<git2::Oid>,
+    pub detached: bool,
+}
+
 fn head_info(
     repo: &git2::Repository,
     options: &structs::GetGitInfoOptions,
-) -> Result<structs::GitHeadInfo> {
+) -> Result<GitHeadInfoInternal> {
     let detached = repo.head_detached().unwrap_or_default();
     let reference = repo.find_reference(options.reference_name.as_str())?;
 
     let head_info = match reference.kind() {
-        None => structs::GitHeadInfo {
+        None => GitHeadInfoInternal {
             reference_name: None,
-            reference_short: None,
             oid: None,
-            oid_short: None,
             detached,
         },
         Some(git2::ReferenceType::Symbolic) => {
+            let reference_name = reference.symbolic_target().map(String::from);
+
             let reference_resolved = reference.resolve().ok_or_log();
-            let symbolic_target = reference.symbolic_target();
-            let reference_name = symbolic_target.map(|v| String::from(v));
-            let reference_short = symbolic_target
-                .map(|v| v.last_part())
-                .map(|v| String::from(v));
-
             let oid = reference_resolved.map(|r| r.target()).flatten();
-            let oid_short = oid.map(|v| v.to_string()[0..8].to_string());
 
-            structs::GitHeadInfo {
+            GitHeadInfoInternal {
                 reference_name,
-                reference_short,
                 oid,
-                oid_short,
                 detached,
             }
         }
         Some(git2::ReferenceType::Direct) => {
-            let symbolic_target = reference.symbolic_target();
-            let reference_name = symbolic_target.map(|v| String::from(v));
-            let reference_short = symbolic_target
-                .map(|v| v.last_part())
-                .map(|v| String::from(v));
-
+            let reference_name = reference.name().map(String::from);
             let oid = reference.target();
-            let oid_short = oid.map(|v| v.to_string()[0..8].to_string());
 
-            structs::GitHeadInfo {
+            GitHeadInfoInternal {
                 reference_name,
-                reference_short,
                 oid,
-                oid_short,
                 detached,
             }
         }
@@ -167,7 +168,7 @@ fn file_status(
 
 fn graph_ahead_behind(
     repo: &git2::Repository,
-    head: &Option<structs::GitHeadInfo>,
+    head: &Option<GitHeadInfoInternal>,
 ) -> Result<structs::GitBranchAheadBehind> {
     let reference: Option<&String> = head.as_ref().map(|h| h.reference_name.as_ref()).flatten();
     let head_oid: Option<&git2::Oid> = head.as_ref().map(|h| h.oid.as_ref()).flatten();

@@ -24,9 +24,7 @@ pub(crate) struct ThemeData {
 
 #[derive(Debug)]
 pub(crate) struct GitHeadInfo {
-    pub reference_name: Option<String>,
     pub reference_short: Option<String>,
-    pub oid: Option<git2::Oid>,
     pub oid_short: Option<String>,
     pub detached: bool,
 }
