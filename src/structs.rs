@@ -29,6 +29,28 @@ pub(crate) struct OutputOptions {
     pub(crate) branch_ahead_behind: Option<(usize, usize)>,
 }
 
+#[derive(Debug)]
+pub(crate) struct ThemeData {
+    pub datetime: String,
+    pub hostname: String,
+    pub username: String,
+    pub python: Option<String>,
+    pub git: Option<GitOutputOptions>,
+}
+
+#[derive(Debug)]
+pub(crate) struct ThemeSymbols {
+    pub git_branch: &'static str,
+    pub git_has_no_upstream: &'static str,
+    pub git_has_commits_up: &'static str,
+    pub git_has_commits_down: &'static str,
+    pub git_has_conflict: &'static str,
+    pub git_has_untracked: &'static str,
+    pub git_has_typechange: &'static str,
+    pub git_has_unstaged: &'static str,
+    pub git_has_staged: &'static str,
+}
+
 impl GetGitInfoOptions {
     pub(crate) fn new() -> Self {
         GetGitInfoOptions {
@@ -38,4 +60,48 @@ impl GetGitInfoOptions {
             include_untracked: true,
         }
     }
+}
+
+impl ThemeSymbols {
+    pub(crate) fn utf_power() -> Self {
+        ThemeSymbols {
+            git_branch: "\u{e0a0}", // 
+            git_has_no_upstream: "ᛘ",
+            git_has_commits_up: "↑",
+            git_has_commits_down: "↓",
+            git_has_conflict: "✘",
+            git_has_untracked: "?",
+            git_has_typechange: "‡",
+            git_has_unstaged: "●",
+            git_has_staged: "●",
+        }
+    }
+    pub(crate) fn utf() -> Self {
+        ThemeSymbols {
+            git_branch: "ᚠ",
+            git_has_no_upstream: "ᛘ",
+            git_has_commits_up: "↑",
+            git_has_commits_down: "↓",
+            git_has_conflict: "✘",
+            git_has_untracked: "?",
+            git_has_typechange: "‡",
+            git_has_unstaged: "●",
+            git_has_staged: "●",
+        }
+    }
+
+    pub(crate) fn ascii() -> Self {
+        ThemeSymbols {
+            git_branch: "",
+            git_has_no_upstream: "&",
+            git_has_commits_up: "^",
+            git_has_commits_down: "v",
+            git_has_conflict: "x",
+            git_has_untracked: "?",
+            git_has_typechange: "T",
+            git_has_unstaged: "*",
+            git_has_staged: "*",
+        }
+    }
+
 }
