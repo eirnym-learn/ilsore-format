@@ -15,7 +15,7 @@ pub(crate) fn process_current_dir(
     let git_dir_buf =
         git_subfolder(options)?.ok_or_else(|| error::Error::from("Not found .git folder"))?;
 
-    return process_repo(&git_dir_buf, options);
+    process_repo(&git_dir_buf, options)
 }
 
 fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::PathBuf>> {
@@ -37,7 +37,7 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
             return Ok(Some(sub_path.to_path_buf()));
         }
     }
-    return Ok(None);
+    Ok(None)
 }
 
 fn process_repo(
@@ -73,24 +73,24 @@ fn head_info(
         Some(git2::ReferenceType::Symbolic) => {
             let reference_resolved = reference.resolve().ok_or_log();
             let symbolic_target = reference.symbolic_target();
-            let reference_name = symbolic_target.map(|v| String::from(v));
+            let reference_name = symbolic_target.map(String::from);
             let reference_short = symbolic_target
                 .map(|v| v.last_part())
-                .map(|v| String::from(v));
+                .map(String::from);
 
             structs::HeadInfo {
                 reference_name,
                 reference_short,
-                oid: reference_resolved.map(|r| r.target()).flatten(),
+                oid: reference_resolved.and_then(|r| r.target()),
                 detached,
             }
         }
         Some(git2::ReferenceType::Direct) => {
             let symbolic_target = reference.symbolic_target();
-            let reference_name = symbolic_target.map(|v| String::from(v));
+            let reference_name = symbolic_target.map(String::from);
             let reference_short = symbolic_target
                 .map(|v| v.last_part())
-                .map(|v| String::from(v));
+                .map(String::from);
 
             structs::HeadInfo {
                 reference_name,
@@ -100,7 +100,7 @@ fn head_info(
             }
         }
     };
-    return Ok(head_info);
+    Ok(head_info)
 }
 
 fn file_status(
@@ -160,14 +160,14 @@ fn graph_ahead_behind(
     repo: &git2::Repository,
     head: &Option<structs::HeadInfo>,
 ) -> Result<(bool, usize, usize)> {
-    let reference: Option<&String> = head.as_ref().map(|h| h.reference_name.as_ref()).flatten();
-    let head_oid: Option<&git2::Oid> = head.as_ref().map(|h| h.oid.as_ref()).flatten();
+    let reference: Option<&String> = head.as_ref().and_then(|h| h.reference_name.as_ref());
+    let head_oid: Option<&git2::Oid> = head.as_ref().and_then(|h| h.oid.as_ref());
 
     if reference.is_none() || head_oid.is_none() {
         return Ok((false, 0, 0));
     }
 
-    let tracking_branch_buf = repo.branch_upstream_name(reference.as_deref().unwrap())?;
+    let tracking_branch_buf = repo.branch_upstream_name(reference.unwrap())?;
     let tracking_branch = tracking_branch_buf.as_str();
 
     if tracking_branch.is_none() {
@@ -182,7 +182,7 @@ fn graph_ahead_behind(
     }
 
     let ahead_behind =
-        repo.graph_ahead_behind(*head_oid.as_deref().unwrap(), tracking_oid.unwrap())?;
+        repo.graph_ahead_behind(*head_oid.unwrap(), tracking_oid.unwrap())?;
 
-    return Ok((true, ahead_behind.0, ahead_behind.1));
+    Ok((true, ahead_behind.0, ahead_behind.1))
 }

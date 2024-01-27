@@ -10,10 +10,10 @@ use common::*;
 fn help() -> Result<(), Box<dyn std::error::Error>> {
     // create environment for this teat
     let path = {
-        let p = tmp_for("help")?;
+        
         // TODO: create inner files
         // std::fs::create_dir(&p.join(".git"))?;
-        p
+        tmp_for("help")?
     };
 
     let result = Command::new(bin_path())

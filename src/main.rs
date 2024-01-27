@@ -20,7 +20,7 @@ fn main() -> error::Result<()> {
     let _short_name: Option<String> = full_name
         .as_ref()
         .map(|v| v.strip_prefix("refs/heads/").unwrap_or(v))
-        .map(|v| String::from(v));
+        .map(String::from);
 
     let a = git_utils::process_current_dir(&structs::GetGitInfoOptions::default()).ok_or_log();
     println!("{:?}", a);

@@ -5,12 +5,12 @@ pub use std::path::Path;
 use std::path::PathBuf;
 
 pub fn bin_path() -> &'static Path {
-    const BIN_PATH: &'static str = env!("CARGO_BIN_EXE_upfind");
+    const BIN_PATH: &str = env!("CARGO_BIN_EXE_upfind");
     Path::new(BIN_PATH)
 }
 
 pub fn tmp_root() -> &'static Path {
-    const TMP_PATH: &'static str = env!("CARGO_TARGET_TMPDIR");
+    const TMP_PATH: &str = env!("CARGO_TARGET_TMPDIR");
     Path::new(TMP_PATH)
 }
 
