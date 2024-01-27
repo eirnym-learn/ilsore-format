@@ -1,32 +1,32 @@
 #[derive(Debug)]
 pub(crate) struct GetGitInfoOptions {
-    pub(crate) start_folder: Option<String>,
-    pub(crate) reference: String,
-    pub(crate) include_submodules: bool,
-    pub(crate) include_untracked: bool,
+    pub start_folder: Option<String>,
+    pub reference: String,
+    pub include_submodules: bool,
+    pub include_untracked: bool,
 }
 
 #[derive(Debug)]
 pub(crate) struct HeadInfo {
-    pub(crate) reference: Option<String>,
-    pub(crate) oid: Option<git2::Oid>, // Short oid
-    pub(crate) detached: bool,
+    pub reference: Option<String>,
+    pub oid: Option<git2::Oid>, // Short oid
+    pub detached: bool,
 }
 
 #[derive(Debug)]
 pub(crate) struct FileStatus {
-    pub(crate) conflict: bool,
-    pub(crate) untracked: bool,
-    pub(crate) typechange: bool,
-    pub(crate) unstaged: bool,
-    pub(crate) staged: bool,
+    pub conflict: bool,
+    pub untracked: bool,
+    pub typechange: bool,
+    pub unstaged: bool,
+    pub staged: bool,
 }
 
 #[derive(Debug)]
 pub(crate) struct OutputOptions {
-    pub(crate) head_info: Option<HeadInfo>,
-    pub(crate) file_status: Option<FileStatus>,
-    pub(crate) branch_ahead_behind: Option<(usize, usize)>,
+    pub head_info: Option<HeadInfo>,
+    pub file_status: Option<FileStatus>,
+    pub branch_ahead_behind: Option<(usize, usize)>,
 }
 
 impl GetGitInfoOptions {

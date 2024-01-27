@@ -1,5 +1,8 @@
+use std::borrow::Cow;
 use std::env;
 use std::path;
+use std::path::Path;
+use std::path::PathBuf;
 
 use crate::error;
 use crate::error::MapLog;
@@ -16,15 +19,18 @@ pub(crate) fn process_current_dir(
 }
 
 fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::PathBuf>> {
-    let path = match options.start_folder.as_ref() {
-        None => env::current_dir()?,
-        Some(value) => path::PathBuf::from(value),
-    };
+    let path = options
+        .start_folder
+        .as_ref()
+        .map(Path::new)
+        .map(Cow::from)
+        .map(Ok)
+        .unwrap_or_else(|| env::current_dir().map(Cow::from))?;
 
     if !path.exists() {
         return Err(error::Error::Message(format!(
-            "Path {:?} doesn't exist",
-            path
+            "Path '{}' doesn't exist",
+            path.display()
         )));
     }
 
@@ -38,15 +44,10 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
 }
 
 fn process_repo(
-    path: &path::PathBuf,
+    path: &Path,
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::OutputOptions> {
-    let repo_opt = git2::Repository::open(path);
-
-    if repo_opt.is_err() {
-        return Err(error::Error::from(repo_opt.err().unwrap()));
-    }
-    let repo = repo_opt.unwrap();
+    let repo = git2::Repository::open(path)?;
     let head_info = head_info(&repo, options).ok_or_log();
     let file_status = file_status(&repo, options).ok_or_log();
     let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).ok_or_log();
@@ -62,7 +63,7 @@ fn head_info(
     repo: &git2::Repository,
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::HeadInfo> {
-    let detached = repo.head_detached().ok().unwrap_or_default();
+    let detached = repo.head_detached().unwrap_or_default();
     let reference = repo.find_reference(options.reference.as_str())?;
 
     let head_info = match reference.kind() {
@@ -74,13 +75,13 @@ fn head_info(
         Some(git2::ReferenceType::Symbolic) => {
             let reference_resolved = reference.resolve().ok_or_log();
             structs::HeadInfo {
-                reference: reference.symbolic_target().map(|v| String::from(v)),
+                reference: reference.symbolic_target().map(ToString::to_string),
                 oid: reference_resolved.map(|r| r.target()).flatten(),
                 detached,
             }
         }
         Some(git2::ReferenceType::Direct) => structs::HeadInfo {
-            reference: reference.symbolic_target().map(|v| String::from(v)),
+            reference: reference.symbolic_target().map(ToString::to_string),
             oid: reference.target(),
             detached,
         },
