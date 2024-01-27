@@ -1,6 +1,5 @@
 //! Integration / end2end / execution tests example
 
-use std::env;
 use std::ops::Not;
 use std::process::Command;
 
