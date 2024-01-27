@@ -12,8 +12,8 @@ use crate::util::LastPart;
 pub(crate) fn process_current_dir(
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
-    let git_dir_buf = git_subfolder(options)?
-        .ok_or_else(|| error::Error::Message("Not found .git folder".to_string()))?;
+    let git_dir_buf =
+        git_subfolder(options)?.ok_or_else(|| error::Error::from("Not found .git folder"))?;
 
     return process_repo(&git_dir_buf, options);
 }
@@ -28,10 +28,7 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
         .unwrap_or_else(|| env::current_dir().map(Cow::from))?;
 
     if !path.exists() {
-        return Err(error::Error::Message(format!(
-            "Path '{}' doesn't exist",
-            path.display()
-        )));
+        return Err(format!("Path '{}' doesn't exist", path.display()).into());
     }
 
     for sub_path in path.ancestors() {
