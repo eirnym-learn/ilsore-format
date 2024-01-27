@@ -2,16 +2,16 @@ use std::borrow::Cow;
 use std::env;
 use std::path;
 use std::path::Path;
-use std::path::PathBuf;
 
 use crate::error;
 use crate::error::MapLog;
 use crate::error::Result;
 use crate::structs;
+use crate::util::LastPart;
 
 pub(crate) fn process_current_dir(
     options: &structs::GetGitInfoOptions,
-) -> Result<structs::OutputOptions> {
+) -> Result<structs::GitOutputOptions> {
     let git_dir_buf =
         git_subfolder(options)?.ok_or_else(|| error::Error::from("Not found .git folder"))?;
 
@@ -43,13 +43,13 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
 fn process_repo(
     path: &Path,
     options: &structs::GetGitInfoOptions,
-) -> Result<structs::OutputOptions> {
+) -> Result<structs::GitOutputOptions> {
     let repo = git2::Repository::open(path)?;
     let head_info = head_info(&repo, options).ok_or_log();
     let file_status = file_status(&repo, options).ok_or_log();
     let branch_ahead_behind = graph_ahead_behind(&repo, &head_info).ok_or_log();
 
-    Ok(structs::OutputOptions {
+    Ok(structs::GitOutputOptions {
         head_info,
         file_status,
         branch_ahead_behind,
@@ -61,27 +61,44 @@ fn head_info(
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::HeadInfo> {
     let detached = repo.head_detached().unwrap_or_default();
-    let reference = repo.find_reference(options.reference.as_str())?;
+    let reference = repo.find_reference(options.reference_name.as_str())?;
 
     let head_info = match reference.kind() {
         None => structs::HeadInfo {
-            reference: None,
+            reference_name: None,
+            reference_short: None,
             oid: None,
             detached,
         },
         Some(git2::ReferenceType::Symbolic) => {
             let reference_resolved = reference.resolve().ok_or_log();
+            let symbolic_target = reference.symbolic_target();
+            let reference_name = symbolic_target.map(|v| String::from(v));
+            let reference_short = symbolic_target
+                .map(|v| v.last_part())
+                .map(|v| String::from(v));
+
             structs::HeadInfo {
-                reference: reference.symbolic_target().map(ToString::to_string),
+                reference_name,
+                reference_short,
                 oid: reference_resolved.map(|r| r.target()).flatten(),
                 detached,
             }
         }
-        Some(git2::ReferenceType::Direct) => structs::HeadInfo {
-            reference: reference.symbolic_target().map(ToString::to_string),
-            oid: reference.target(),
-            detached,
-        },
+        Some(git2::ReferenceType::Direct) => {
+            let symbolic_target = reference.symbolic_target();
+            let reference_name = symbolic_target.map(|v| String::from(v));
+            let reference_short = symbolic_target
+                .map(|v| v.last_part())
+                .map(|v| String::from(v));
+
+            structs::HeadInfo {
+                reference_name,
+                reference_short,
+                oid: reference.target(),
+                detached,
+            }
+        }
     };
     return Ok(head_info);
 }
@@ -142,12 +159,12 @@ fn file_status(
 fn graph_ahead_behind(
     repo: &git2::Repository,
     head: &Option<structs::HeadInfo>,
-) -> Result<(usize, usize)> {
-    let reference: Option<&String> = head.as_ref().map(|h| h.reference.as_ref()).flatten();
+) -> Result<(bool, usize, usize)> {
+    let reference: Option<&String> = head.as_ref().map(|h| h.reference_name.as_ref()).flatten();
     let head_oid: Option<&git2::Oid> = head.as_ref().map(|h| h.oid.as_ref()).flatten();
 
     if reference.is_none() || head_oid.is_none() {
-        return Ok((0, 0));
+        return Ok((false, 0, 0));
     }
 
     let tracking_branch_buf = repo.branch_upstream_name(reference.as_deref().unwrap())?;
@@ -167,5 +184,5 @@ fn graph_ahead_behind(
     let ahead_behind =
         repo.graph_ahead_behind(*head_oid.as_deref().unwrap(), tracking_oid.unwrap())?;
 
-    return Ok(ahead_behind);
+    return Ok((true, ahead_behind.0, ahead_behind.1));
 }
