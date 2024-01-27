@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::sync::OnceLock;
 
 pub(crate) static APP_NAME: OnceLock<String> = OnceLock::new();
@@ -9,7 +10,7 @@ pub(crate) static VERBOSE_ERRORS: bool = true;
 pub(crate) enum Error {
     Io(std::io::Error),
     Git(git2::Error),
-    Message(String),
+    Message(Cow<'static, str>),
 }
 
 pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
@@ -28,13 +29,13 @@ impl From<git2::Error> for Error {
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
-        Self::Message(s)
+        Self::Message(s.into())
     }
 }
 
-impl From<&'_ str> for Error {
-    fn from(s: &str) -> Self {
-        Self::Message(s.to_string())
+impl From<&'static str> for Error {
+    fn from(s: &'static str) -> Self {
+        Self::Message(s.into())
     }
 }
 
