@@ -1,13 +1,23 @@
 use error::MapLog;
+use std::env;
 
 mod error;
 mod git_utils;
 mod structs;
 mod util;
 
-type Result<T, E = error::Error> = std::result::Result<T, E>;
+fn main() -> error::Result<()> {
+    let _ = error::APP_NAME.get_or_init(|| {
+        env::current_exe()
+            .ok()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
+    });
 
-fn main() -> Result<()> {
     let full_name = Some(String::from("hello world"));
     let short_name: Option<String> = full_name
         .as_ref()
