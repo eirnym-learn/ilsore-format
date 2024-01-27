@@ -1,12 +1,17 @@
 [package]
 name = "upfind"
 version = "1.0.0"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 git2 = "0.18.1"
 gethostname = "0.4.3"
+
+[dev-dependencies]
+pretty_assertions = "1.4.0"
+rstest = "0.18.2"
 
 [profile.release]
 strip = true
