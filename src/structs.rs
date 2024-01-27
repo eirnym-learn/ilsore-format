@@ -1,4 +1,4 @@
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub(crate) struct GetGitInfoOptions {
     pub start_folder: Option<String>,
     pub reference_name: String,
@@ -52,8 +52,8 @@ pub(crate) struct ThemeSymbols {
     pub git_has_staged: &'static str,
 }
 
-impl GetGitInfoOptions {
-    pub(crate) fn default() -> Self {
+impl Default for GetGitInfoOptions {
+    fn default() -> Self {
         GetGitInfoOptions {
             start_folder: None,
             reference_name: "HEAD".to_string(),
@@ -104,5 +104,4 @@ impl ThemeSymbols {
             git_has_staged: "*",
         }
     }
-
 }
