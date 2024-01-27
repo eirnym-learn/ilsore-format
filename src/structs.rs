@@ -7,27 +7,10 @@ pub(crate) struct GetGitInfoOptions {
 }
 
 #[derive(Debug)]
-pub(crate) struct HeadInfo {
-    pub reference_name: Option<String>,
-    pub reference_short: Option<String>,
-    pub oid: Option<git2::Oid>, // Short oid
-    pub detached: bool,
-}
-
-#[derive(Debug)]
-pub(crate) struct FileStatus {
-    pub conflict: bool,
-    pub untracked: bool,
-    pub typechange: bool,
-    pub unstaged: bool,
-    pub staged: bool,
-}
-
-#[derive(Debug)]
 pub(crate) struct GitOutputOptions {
-    pub head_info: Option<HeadInfo>,
-    pub file_status: Option<FileStatus>,
-    pub branch_ahead_behind: Option<(bool, usize, usize)>,
+    pub head_info: Option<GitHeadInfo>,
+    pub file_status: Option<GitFileStatus>,
+    pub branch_ahead_behind: Option<GitBranchAheadBehind>,
 }
 
 #[derive(Debug)]
@@ -37,6 +20,30 @@ pub(crate) struct ThemeData {
     pub username: String,
     pub python: Option<String>,
     pub git: Option<GitOutputOptions>,
+}
+
+#[derive(Debug)]
+pub(crate) struct GitHeadInfo {
+    pub reference_name: Option<String>,
+    pub reference_short: Option<String>,
+    pub oid: Option<git2::Oid>,
+    pub oid_short: Option<String>,
+    pub detached: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct GitFileStatus {
+    pub conflict: bool,
+    pub untracked: bool,
+    pub typechange: bool,
+    pub unstaged: bool,
+    pub staged: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct GitBranchAheadBehind {
+    pub ahead: usize,
+    pub behind: usize,
 }
 
 #[derive(Debug)]

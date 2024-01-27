@@ -59,15 +59,16 @@ fn process_repo(
 fn head_info(
     repo: &git2::Repository,
     options: &structs::GetGitInfoOptions,
-) -> Result<structs::HeadInfo> {
+) -> Result<structs::GitHeadInfo> {
     let detached = repo.head_detached().unwrap_or_default();
     let reference = repo.find_reference(options.reference_name.as_str())?;
 
     let head_info = match reference.kind() {
-        None => structs::HeadInfo {
+        None => structs::GitHeadInfo {
             reference_name: None,
             reference_short: None,
             oid: None,
+            oid_short: None,
             detached,
         },
         Some(git2::ReferenceType::Symbolic) => {
@@ -78,10 +79,14 @@ fn head_info(
                 .map(|v| v.last_part())
                 .map(|v| String::from(v));
 
-            structs::HeadInfo {
+            let oid = reference_resolved.map(|r| r.target()).flatten();
+            let oid_short = oid.map(|v| v.to_string()[0..8].to_string());
+
+            structs::GitHeadInfo {
                 reference_name,
                 reference_short,
-                oid: reference_resolved.map(|r| r.target()).flatten(),
+                oid,
+                oid_short,
                 detached,
             }
         }
@@ -92,10 +97,14 @@ fn head_info(
                 .map(|v| v.last_part())
                 .map(|v| String::from(v));
 
-            structs::HeadInfo {
+            let oid = reference.target();
+            let oid_short = oid.map(|v| v.to_string()[0..8].to_string());
+
+            structs::GitHeadInfo {
                 reference_name,
                 reference_short,
-                oid: reference.target(),
+                oid,
+                oid_short,
                 detached,
             }
         }
@@ -106,7 +115,7 @@ fn head_info(
 fn file_status(
     repo: &git2::Repository,
     options: &structs::GetGitInfoOptions,
-) -> Result<structs::FileStatus> {
+) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
     status_options.show(git2::StatusShow::IndexAndWorkdir);
     status_options.exclude_submodules(!options.include_submodules);
@@ -147,7 +156,7 @@ fn file_status(
         }
     }
 
-    Ok(structs::FileStatus {
+    Ok(structs::GitFileStatus {
         conflict,
         untracked,
         typechange,
@@ -158,13 +167,13 @@ fn file_status(
 
 fn graph_ahead_behind(
     repo: &git2::Repository,
-    head: &Option<structs::HeadInfo>,
-) -> Result<(bool, usize, usize)> {
+    head: &Option<structs::GitHeadInfo>,
+) -> Result<structs::GitBranchAheadBehind> {
     let reference: Option<&String> = head.as_ref().map(|h| h.reference_name.as_ref()).flatten();
     let head_oid: Option<&git2::Oid> = head.as_ref().map(|h| h.oid.as_ref()).flatten();
 
     if reference.is_none() || head_oid.is_none() {
-        return Ok((false, 0, 0));
+        return Err("tracking branch doesn't exist".into());
     }
 
     let tracking_branch_buf = repo.branch_upstream_name(reference.as_deref().unwrap())?;
@@ -184,5 +193,8 @@ fn graph_ahead_behind(
     let ahead_behind =
         repo.graph_ahead_behind(*head_oid.as_deref().unwrap(), tracking_oid.unwrap())?;
 
-    return Ok((true, ahead_behind.0, ahead_behind.1));
+    return Ok(structs::GitBranchAheadBehind {
+        ahead: ahead_behind.0,
+        behind: ahead_behind.1,
+    });
 }
