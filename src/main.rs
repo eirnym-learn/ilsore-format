@@ -20,9 +20,8 @@ fn main() -> error::Result<()> {
         git: git_utils::process_current_dir(&structs::GetGitInfoOptions::default()).ok_or_log(),
     };
     let symbols = structs::ThemeSymbols::utf_power();
-    //println!("{:?}", theme_data);
     println!(
-        "{:}",
+        "{}",
         ilsore_format::format_ilsore_no_color(&theme_data, &symbols)
     );
     Ok(())
