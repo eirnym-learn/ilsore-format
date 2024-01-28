@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 pub(crate) static APP_NAME: OnceLock<String> = OnceLock::new();
 
 /// Flag if error required
-pub(crate) static VERBOSE_ERRORS: bool = true;
+pub(crate) static VERBOSE_ERRORS: bool = false;
 
 #[derive(Debug)]
 pub(crate) enum Error {
