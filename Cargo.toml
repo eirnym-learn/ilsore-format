@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 git2 = "0.18.1"
 gethostname = "0.4.3"
+chrono = "0.4.33"
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
