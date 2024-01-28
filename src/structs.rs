@@ -14,10 +14,16 @@ pub(crate) struct GitOutputOptions {
 }
 
 #[derive(Debug)]
+pub(crate) struct DateTime {
+    pub date: String,
+    pub time: String,
+}
+
+#[derive(Debug)]
 pub(crate) struct ThemeData {
-    pub datetime: String,
-    pub hostname: String,
-    pub username: String,
+    pub datetime: DateTime,
+    pub hostname: std::ffi::OsString,
+    pub username: Option<std::ffi::OsString>,
     pub python: Option<String>,
     pub git: Option<GitOutputOptions>,
 }
@@ -48,6 +54,7 @@ pub(crate) struct GitBranchAheadBehind {
 pub(crate) struct ThemeSymbols {
     pub git_branch: &'static str,
     pub git_has_no_upstream: &'static str,
+    pub git_branch_detached: &'static str,
     pub git_has_commits_up: &'static str,
     pub git_has_commits_down: &'static str,
     pub git_has_conflict: &'static str,
@@ -73,6 +80,7 @@ impl ThemeSymbols {
         ThemeSymbols {
             git_branch: "\u{e0a0}", // 
             git_has_no_upstream: "ᛘ",
+            git_branch_detached: "\u{2630}", // ☰
             git_has_commits_up: "↑",
             git_has_commits_down: "↓",
             git_has_conflict: "✘",
@@ -86,6 +94,7 @@ impl ThemeSymbols {
         ThemeSymbols {
             git_branch: "ᚠ",
             git_has_no_upstream: "ᛘ",
+            git_branch_detached: "\u{2630}", // ☰
             git_has_commits_up: "↑",
             git_has_commits_down: "↓",
             git_has_conflict: "✘",
@@ -100,6 +109,7 @@ impl ThemeSymbols {
         ThemeSymbols {
             git_branch: "",
             git_has_no_upstream: "&",
+            git_branch_detached: "||",
             git_has_commits_up: "^",
             git_has_commits_down: "v",
             git_has_conflict: "x",
