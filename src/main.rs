@@ -22,7 +22,7 @@ fn main() -> error::Result<()> {
     let symbols = structs::ThemeSymbols::utf_power();
     //println!("{:?}", theme_data);
     println!(
-        "{:?}",
+        "{:}",
         ilsore_format::format_ilsore_no_color(&theme_data, &symbols)
     );
     Ok(())

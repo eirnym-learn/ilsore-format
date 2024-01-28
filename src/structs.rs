@@ -79,7 +79,7 @@ impl ThemeSymbols {
     pub(crate) fn utf_power() -> Self {
         ThemeSymbols {
             git_branch: "\u{e0a0}", // 
-            git_has_no_upstream: "ᛘ",
+            git_has_no_upstream: "ᛘ ",
             git_branch_detached: "\u{2630}", // ☰
             git_is_ahead: "↑",
             git_is_behind: "↓",
@@ -93,7 +93,7 @@ impl ThemeSymbols {
     pub(crate) fn utf() -> Self {
         ThemeSymbols {
             git_branch: "ᚠ",
-            git_has_no_upstream: "ᛘ",
+            git_has_no_upstream: "ᛘ ",
             git_branch_detached: "\u{2630}", // ☰
             git_is_ahead: "↑",
             git_is_behind: "↓",
