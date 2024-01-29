@@ -4,40 +4,37 @@ pub(crate) fn format_ilsore_no_color(
     data: &structs::ThemeData,
     symbols: &structs::ThemeSymbols,
 ) -> String {
-    let empty_string: String = "".to_string();
-
-    let date_time = format!("[{} {}]", data.datetime.date, data.datetime.time);
+    let date_time = format!("[{} {}]", data.datetime.date, data.datetime.time,);
 
     let user_host = format!(
         "{}@{}",
-        data.username.as_ref().unwrap_or(&empty_string),
-        data.hostname
+        data.username.as_deref().unwrap_or_default(),
+        data.hostname.as_deref().unwrap_or_default(),
     );
-    let python = format_ilsore_python(&data.python);
-    let git = data
-        .git
-        .as_ref()
-        .map_or(empty_string, |v| format_ilsore_git(v, symbols));
+    let python = data.python.as_ref().map(|v| format!("[{}]", v));
 
-    format!("{}{}{}{}", date_time, user_host, python, git)
+    let git = data.git.as_ref().map(|v| format_ilsore_git(v, symbols));
+
+    format!(
+        "{}{}{}{}",
+        date_time,
+        user_host,
+        python.as_deref().unwrap_or_default(),
+        git.as_deref().unwrap_or_default(),
+    )
 }
 
-fn format_ilsore_python(data: &Option<String>) -> String {
-    let empty_string: String = "".to_string();
-
-    data.as_ref().map_or(empty_string, |v| format!("[{}]", v))
-}
 #[inline]
 fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeSymbols) -> String {
-    let empty_string: String = "".to_string();
-
     if data.head_info.is_none() {
-        return empty_string;
+        return "".to_string();
     }
 
     format!(
         "(Git: {} {})",
-        format_ilsore_git_head_info(&data.head_info, symbols),
+        format_ilsore_git_head_info(&data.head_info, symbols)
+            .as_deref()
+            .unwrap_or_default(),
         format_ilsore_git_symbols(
             &data.head_info,
             &data.file_status,
@@ -48,12 +45,10 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
 }
 
 #[inline]
-fn format_ilsore_git_head_info(
-    head_info: &Option<structs::GitHeadInfo>,
-    symbols: &structs::ThemeSymbols,
-) -> String {
-    let empty_string: String = "".to_string();
-
+fn format_ilsore_git_head_info<'a>(
+    head_info: &'a Option<structs::GitHeadInfo>,
+    symbols: &'a structs::ThemeSymbols,
+) -> Option<String> {
     head_info
         .as_ref()
         .map(|h| {
@@ -63,7 +58,6 @@ fn format_ilsore_git_head_info(
                 .or(h.oid_short.as_ref().map(String::to_string))
         })
         .flatten()
-        .unwrap_or(empty_string)
 }
 
 #[inline]
@@ -112,10 +106,9 @@ fn format_ilsore_git_symbols(
 }
 
 #[inline]
-fn symbol(present: bool, symbol: &'static str) -> String {
-    let value = match present {
-        true => Some(symbol),
-        false => None,
+fn symbol(present: bool, symbol: &'static str) -> &'static str {
+    return match present {
+        true => symbol,
+        false => "",
     };
-    value.unwrap_or_default().to_string()
 }
