@@ -35,14 +35,14 @@ fn theme_data() -> structs::ThemeData {
             );
         });
     });
-    let theme_data = structs::ThemeData {
+
+    structs::ThemeData {
         datetime: date_time::date_time(),
         hostname,
         username: user_host::username(),
         python: python_status::python_info(),
         git: git_info.flatten(),
-    };
-    return theme_data;
+    }
 }
 fn init_app_name() {
     let _ = error::APP_NAME.get_or_init(|| {
