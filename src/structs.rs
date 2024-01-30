@@ -4,6 +4,7 @@ pub(crate) struct GetGitInfoOptions {
     pub reference_name: String,
     pub include_submodules: bool,
     pub include_untracked: bool,
+    pub no_refresh: bool,
 }
 
 #[derive(Debug)]
@@ -22,7 +23,7 @@ pub(crate) struct DateTime {
 #[derive(Debug)]
 pub(crate) struct ThemeData {
     pub datetime: DateTime,
-    pub hostname: String,
+    pub hostname: Option<String>,
     pub username: Option<String>,
     pub python: Option<String>,
     pub git: Option<GitOutputOptions>,
@@ -71,6 +72,7 @@ impl Default for GetGitInfoOptions {
             reference_name: "HEAD".to_string(),
             include_submodules: false,
             include_untracked: true,
+            no_refresh: true,
         }
     }
 }

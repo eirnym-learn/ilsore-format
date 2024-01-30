@@ -1,5 +1,6 @@
 use error::MapLog;
 use std::env;
+use std::thread;
 
 mod date_time;
 mod error;
@@ -12,13 +13,7 @@ mod util;
 
 fn main() -> error::Result<()> {
     init_app_name();
-    let theme_data = structs::ThemeData {
-        datetime: date_time::date_time(),
-        hostname: user_host::hostname(),
-        username: user_host::username(),
-        python: python_status::python_info(),
-        git: git_utils::process_current_dir(&structs::GetGitInfoOptions::default()).ok_or_log(),
-    };
+    let theme_data = theme_data();
     let symbols = structs::ThemeSymbols::utf_power();
     println!(
         "{}",
@@ -27,6 +22,28 @@ fn main() -> error::Result<()> {
     Ok(())
 }
 
+fn theme_data() -> structs::ThemeData {
+    let mut hostname: Option<String> = Some(Default::default());
+    let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
+    thread::scope(|s| {
+        s.spawn(|| {
+            let _ = hostname.insert(user_host::hostname());
+        });
+        s.spawn(|| {
+            let _ = git_info.insert(
+                git_utils::process_current_dir(&structs::GetGitInfoOptions::default()).ok_or_log(),
+            );
+        });
+    });
+    let theme_data = structs::ThemeData {
+        datetime: date_time::date_time(),
+        hostname,
+        username: user_host::username(),
+        python: python_status::python_info(),
+        git: git_info.flatten(),
+    };
+    return theme_data;
+}
 fn init_app_name() {
     let _ = error::APP_NAME.get_or_init(|| {
         if error::VERBOSE_ERRORS {
