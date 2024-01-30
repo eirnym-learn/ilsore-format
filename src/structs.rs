@@ -22,8 +22,8 @@ pub(crate) struct DateTime {
 #[derive(Debug)]
 pub(crate) struct ThemeData {
     pub datetime: DateTime,
-    pub hostname: std::ffi::OsString,
-    pub username: Option<std::ffi::OsString>,
+    pub hostname: String,
+    pub username: Option<String>,
     pub python: Option<String>,
     pub git: Option<GitOutputOptions>,
 }
@@ -55,8 +55,8 @@ pub(crate) struct ThemeSymbols {
     pub git_branch: &'static str,
     pub git_has_no_upstream: &'static str,
     pub git_branch_detached: &'static str,
-    pub git_has_commits_up: &'static str,
-    pub git_has_commits_down: &'static str,
+    pub git_is_ahead: &'static str,
+    pub git_is_behind: &'static str,
     pub git_has_conflict: &'static str,
     pub git_has_untracked: &'static str,
     pub git_has_typechange: &'static str,
@@ -79,10 +79,10 @@ impl ThemeSymbols {
     pub(crate) fn utf_power() -> Self {
         ThemeSymbols {
             git_branch: "\u{e0a0}", // 
-            git_has_no_upstream: "ᛘ",
+            git_has_no_upstream: "ᛘ ",
             git_branch_detached: "\u{2630}", // ☰
-            git_has_commits_up: "↑",
-            git_has_commits_down: "↓",
+            git_is_ahead: "↑",
+            git_is_behind: "↓",
             git_has_conflict: "✘",
             git_has_untracked: "?",
             git_has_typechange: "‡",
@@ -93,10 +93,10 @@ impl ThemeSymbols {
     pub(crate) fn utf() -> Self {
         ThemeSymbols {
             git_branch: "ᚠ",
-            git_has_no_upstream: "ᛘ",
+            git_has_no_upstream: "ᛘ ",
             git_branch_detached: "\u{2630}", // ☰
-            git_has_commits_up: "↑",
-            git_has_commits_down: "↓",
+            git_is_ahead: "↑",
+            git_is_behind: "↓",
             git_has_conflict: "✘",
             git_has_untracked: "?",
             git_has_typechange: "‡",
@@ -110,8 +110,8 @@ impl ThemeSymbols {
             git_branch: "",
             git_has_no_upstream: "&",
             git_branch_detached: "||",
-            git_has_commits_up: "^",
-            git_has_commits_down: "v",
+            git_is_ahead: "^",
+            git_is_behind: "v",
             git_has_conflict: "x",
             git_has_untracked: "?",
             git_has_typechange: "T",

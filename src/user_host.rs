@@ -1,7 +1,11 @@
-pub fn hostname() -> std::ffi::OsString {
-    return gethostname::gethostname();
+use crate::error::MapLog;
+pub fn hostname() -> String {
+    return gethostname::gethostname()
+        .to_str()
+        .unwrap_or_default()
+        .to_string();
 }
 
-pub fn username() -> Option<std::ffi::OsString> {
-    return std::env::var_os("USER");
+pub fn username() -> Option<String> {
+    return std::env::var("USER").ok_or_log();
 }
