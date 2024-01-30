@@ -39,7 +39,7 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
             &data.head_info,
             &data.file_status,
             &data.branch_ahead_behind,
-            &symbols
+            symbols
         )
     )
 }
@@ -49,15 +49,12 @@ fn format_ilsore_git_head_info<'a>(
     head_info: &'a Option<structs::GitHeadInfo>,
     symbols: &'a structs::ThemeSymbols,
 ) -> Option<String> {
-    head_info
-        .as_ref()
-        .map(|h| {
-            h.reference_short
-                .as_ref()
-                .map(|v| format!("{} {}", symbols.git_branch, v))
-                .or(h.oid_short.as_ref().map(String::to_string))
-        })
-        .flatten()
+    head_info.as_ref().and_then(|h| {
+        h.reference_short
+            .as_ref()
+            .map(|v| format!("{} {}", symbols.git_branch, v))
+            .or(h.oid_short.as_ref().map(String::to_string))
+    })
 }
 
 #[inline]
@@ -107,8 +104,8 @@ fn format_ilsore_git_symbols(
 
 #[inline]
 fn symbol(present: bool, symbol: &'static str) -> &'static str {
-    return match present {
+    match present {
         true => symbol,
         false => "",
-    };
+    }
 }

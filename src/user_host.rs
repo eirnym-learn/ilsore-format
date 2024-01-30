@@ -7,5 +7,5 @@ pub fn hostname() -> String {
 }
 
 pub fn username() -> Option<String> {
-    return std::env::var("USER").ok_or_log();
+    std::env::var("USER").ok_or_log()
 }
