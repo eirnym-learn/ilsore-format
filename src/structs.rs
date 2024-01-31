@@ -78,7 +78,7 @@ impl Default for GetGitInfoOptions {
 }
 
 impl ThemeSymbols {
-    pub(crate) fn utf_power() -> Self {
+    pub(crate) fn utf8_power() -> Self {
         ThemeSymbols {
             git_branch: "\u{e0a0}", // 
             git_has_no_upstream: "ᛘ ",
@@ -92,7 +92,7 @@ impl ThemeSymbols {
             git_has_staged: "●",
         }
     }
-    pub(crate) fn utf() -> Self {
+    pub(crate) fn utf8() -> Self {
         ThemeSymbols {
             git_branch: "ᚠ",
             git_has_no_upstream: "ᛘ ",

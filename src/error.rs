@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::env;
 use std::sync::OnceLock;
 
 pub(crate) static APP_NAME: OnceLock<String> = OnceLock::new();
@@ -108,4 +109,19 @@ where
         });
         self.ok()
     }
+}
+
+pub(crate) fn setup_errors() {
+    let _ = APP_NAME.get_or_init(|| {
+        if VERBOSE_ERRORS {
+            env::current_exe()
+                .map_or_else(
+                    |_| Some(env!("CARGO_BIN_NAME").to_string()),
+                    |p| p.file_stem().map(|s| s.to_string_lossy().to_string()),
+                )
+                .expect("filename by env")
+        } else {
+            "".to_string()
+        }
+    });
 }
