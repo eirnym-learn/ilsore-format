@@ -16,7 +16,7 @@ pub(crate) fn format_ilsore_color(
 
     let user_host = format!(
         "{}{}{RESET_COLOR}@{}{}{RESET_COLOR}",
-        format_color_bold("214"),
+        format_color("214"),
         data.username.as_deref().unwrap_or_default(),
         format_color("46"),
         data.hostname.as_deref().unwrap_or_default(),
