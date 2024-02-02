@@ -52,9 +52,9 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
 }
 
 #[inline]
-fn format_ilsore_git_head_info<'a>(
-    head_info: &'a Option<structs::GitHeadInfo>,
-    symbols: &'a structs::ThemeSymbols,
+fn format_ilsore_git_head_info(
+    head_info: &Option<structs::GitHeadInfo>,
+    symbols: &structs::ThemeSymbols,
 ) -> Option<String> {
     head_info.as_ref().and_then(|h| {
         h.reference_short
