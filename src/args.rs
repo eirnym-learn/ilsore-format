@@ -10,6 +10,10 @@ pub(crate) static THEME_SYMBOLS: OnceLock<
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub(crate) struct Cli {
+    /// Color output
+    #[arg(long, default_value_t = false)]
+    pub color: bool,
+
     /// Set if hostname is already known
     #[arg(long, value_name = "HOSTNAME", default_value = None)]
     pub static_hostname: Option<String>,

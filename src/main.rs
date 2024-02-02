@@ -7,6 +7,7 @@ mod date_time;
 mod error;
 mod git_utils;
 mod ilsore_format;
+mod ilsore_format_color;
 mod python_status;
 mod structs;
 mod user_host;
@@ -19,10 +20,14 @@ fn main() -> error::Result<()> {
 
     let theme_data = theme_data(&args);
     let symbols = args.symbols();
-    println!(
-        "{}",
+
+    let result = if args.color {
+        ilsore_format_color::format_ilsore_color(&theme_data, symbols)
+    } else {
         ilsore_format::format_ilsore_no_color(&theme_data, symbols)
-    );
+    };
+    print!("{}", result);
+
     Ok(())
 }
 
@@ -55,6 +60,7 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
     };
 
     structs::ThemeData {
+        last_exit_status: args.last_exit_status,
         datetime: date_time::date_time(),
         hostname: hostname.clone(),
         username: user_host::username(),

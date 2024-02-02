@@ -22,6 +22,7 @@ pub(crate) struct DateTime {
 
 #[derive(Debug)]
 pub(crate) struct ThemeData {
+    pub last_exit_status: u8,
     pub datetime: DateTime,
     pub hostname: Option<String>,
     pub username: Option<String>,
@@ -80,8 +81,8 @@ impl Default for GetGitInfoOptions {
 impl ThemeSymbols {
     pub(crate) fn utf8_power() -> Self {
         ThemeSymbols {
-            git_branch: "\u{e0a0}", // 
-            git_has_no_upstream: "ᛘ ",
+            git_branch: "\u{e0a0}",          // 
+            git_has_no_upstream: "\u{25B2}", // ▲
             git_branch_detached: "\u{2630}", // ☰
             git_is_ahead: "↑",
             git_is_behind: "↓",
@@ -95,7 +96,7 @@ impl ThemeSymbols {
     pub(crate) fn utf8() -> Self {
         ThemeSymbols {
             git_branch: "ᚠ",
-            git_has_no_upstream: "ᛘ ",
+            git_has_no_upstream: "ᛘ",
             git_branch_detached: "\u{2630}", // ☰
             git_is_ahead: "↑",
             git_is_behind: "↓",
