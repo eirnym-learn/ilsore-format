@@ -15,18 +15,13 @@ mod util;
 
 fn main() -> error::Result<()> {
     error::setup_errors();
-    args::init_theme_symbols();
+    args::init_argument_parser();
     let args = args::Cli::parse();
 
     let theme_data = theme_data(&args);
     let symbols = args.symbols();
 
-    let result = if args.color {
-        ilsore_format_color::format_ilsore_color(&theme_data, symbols)
-    } else {
-        ilsore_format::format_ilsore_no_color(&theme_data, symbols)
-    };
-    print!("{}", result);
+    print!("{}", args.theme()(&theme_data, symbols));
 
     Ok(())
 }
