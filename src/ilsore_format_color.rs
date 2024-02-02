@@ -69,8 +69,7 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
     let git_info = vec![
         data.head_info
             .as_ref()
-            .map(|h| format_ilsore_git_branch(h, symbols))
-            .flatten()
+            .and_then(|h| format_ilsore_git_branch(h, symbols))
             .unwrap_or_default(),
         format_ilsore_git_symbols(
             &data.head_info,
@@ -156,7 +155,7 @@ fn format_ilsore_git_symbols(
 
     let result = result_data.join(" "); // TODO: spaces at the end
 
-    if result.len() > 0 {
+    if !result.is_empty() {
         Some(format!("{}{RESET_COLOR}", result))
     } else {
         None
