@@ -121,7 +121,7 @@ fn format_ilsore_git_symbols(
     let detached = head_info.as_ref().map_or(false, |b| b.detached);
     let no_upstream = branch_ahead_behind.is_none();
     let is_ahead = branch_ahead_behind.as_ref().map_or(false, |b| b.ahead > 0);
-    let is_behind = branch_ahead_behind.as_ref().map_or(false, |b| b.ahead > 0);
+    let is_behind = branch_ahead_behind.as_ref().map_or(false, |b| b.behind > 0);
     let has_staged = file_status.as_ref().map_or(false, |b| b.staged);
     let has_unstaged = file_status.as_ref().map_or(false, |b| b.unstaged);
     let has_typechange = file_status.as_ref().map_or(false, |b| b.typechange);
