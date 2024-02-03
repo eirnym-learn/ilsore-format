@@ -48,6 +48,10 @@ pub(crate) struct Cli {
     #[arg(long, default_value_t = true, action=clap::ArgAction::SetFalse)]
     pub git_exclude_ahead_behind: bool,
 
+    /// Exclude workdir file stats leaving query index only
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
+    pub git_exclude_stats_workdir: bool,
+
     /// Last command exit status
     #[arg(long, value_name = "ERROR_CODE", default_value_t = 0)]
     pub last_exit_status: u8,

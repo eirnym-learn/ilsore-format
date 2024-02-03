@@ -147,8 +147,13 @@ fn file_status(
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
-    status_options.show(git2::StatusShow::IndexAndWorkdir);
+    let status_show = match options.include_workdir {
+        true => git2::StatusShow::IndexAndWorkdir,
+        false => git2::StatusShow::Index,
+    };
+    status_options.show(status_show);
     status_options.no_refresh(options.refresh_status);
+    status_options.update_index(options.refresh_status);
     status_options.exclude_submodules(!options.include_submodules);
     status_options.include_ignored(false);
     status_options.include_unreadable(false);
