@@ -147,7 +147,7 @@ fn file_status(
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
-    let status_show = match options.include_workdir {
+    let status_show = match options.include_workdir_stats {
         true => git2::StatusShow::IndexAndWorkdir,
         false => git2::StatusShow::Index,
     };

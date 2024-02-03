@@ -37,7 +37,7 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
         include_untracked: !args.git_exclude_untracked,
         refresh_status: args.git_refresh_status,
         include_ahead_behind: !args.git_exclude_ahead_behind,
-        include_workdir: !args.git_exclude_stats_workdir,
+        include_workdir_stats: !args.git_exclude_workdir_stats,
     };
 
     if args.static_hostname.is_none() || !args.disable_git {

@@ -50,7 +50,7 @@ pub(crate) struct Cli {
 
     /// Exclude workdir file stats leaving query index only
     #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
-    pub git_exclude_stats_workdir: bool,
+    pub git_exclude_workdir_stats: bool,
 
     /// Last command exit status
     #[arg(long, value_name = "ERROR_CODE", default_value_t = 0)]

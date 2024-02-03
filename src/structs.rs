@@ -22,7 +22,7 @@ pub(crate) struct GetGitInfoOptions<'a> {
     pub include_ahead_behind: bool,
 
     /// Flag if git status should include workdir check
-    pub include_workdir: bool,
+    pub include_workdir_stats: bool,
 }
 
 #[derive(Debug)]
