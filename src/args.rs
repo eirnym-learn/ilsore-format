@@ -15,7 +15,7 @@ pub(crate) struct Cli {
     pub static_hostname: Option<String>,
 
     /// Don't retrieve git information
-    #[arg(long, default_value_t = false, value_name = "INCLUDE")]
+    #[arg(long, value_name = "INCLUDE", default_value_t = false)]
     pub disable_git: bool,
 
     /// Git reference to get information for
@@ -27,19 +27,19 @@ pub(crate) struct Cli {
     pub git_start_folder: Option<path::PathBuf>,
 
     /// If git status should include submodules
-    #[arg(long, default_value_t = false, value_name = "INCLUDE")]
+    #[arg(long, value_name = "INCLUDE", default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_include_submodules: bool,
 
     /// If git status should include untracked files
-    #[arg(long, default_value_t = true, value_name = "INCLUDE")]
-    pub git_include_untracked: bool,
+    #[arg(long, value_name = "INCLUDE", default_value_t = true, action=clap::ArgAction::SetFalse)]
+    pub git_exclude_untracked: bool,
 
     /// If git status should softly refresh indices
-    #[arg(long, default_value_t = false, value_name = "INCLUDE")]
+    #[arg(long, value_name = "INCLUDE", default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_refresh_status: bool,
 
     /// Last command exit status
-    #[arg(long, default_value_t = 0, value_name = "ERROR_CODE")]
+    #[arg(long, value_name = "ERROR_CODE", default_value_t = 0)]
     pub last_exit_status: u8,
 
     /// Theme symbols to use
