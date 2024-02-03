@@ -43,8 +43,11 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
 
 fn process_repo(
     path: &Path,
-    options: &structs::GetGitInfoOptions,
+    input_options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
+    let options = configuration_overrided(path, input_options)?;
+    println!("{:#?}", options);
+
     let mut head_info_result: Option<Option<structs::GitHeadInfo>> = Some(None);
     let mut branch_ahead_behind_result: Option<Option<structs::GitBranchAheadBehind>> = Some(None);
     let mut file_status_result: Option<Option<structs::GitFileStatus>> = Some(None);
@@ -56,7 +59,8 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let head_info_internal = head_info(&repo, options).ok_or_log();
+            let head_info_internal = head_info(&repo, input_options.reference_name).ok_or_log();
+
             if options.include_ahead_behind {
                 let _ = branch_ahead_behind_result
                     .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
@@ -70,7 +74,7 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let _ = file_status_result.insert(file_status(&repo, options).ok_or_log());
+            let _ = file_status_result.insert(file_status(&repo, &options).ok_or_log());
         });
     });
 
@@ -88,6 +92,15 @@ struct GitHeadInfoInternal {
     pub detached: bool,
 }
 
+#[derive(Debug)]
+struct GetGitInfoOptionsInternal {
+    pub include_submodules: bool,
+    pub include_untracked: bool,
+    pub refresh_status: bool,
+    pub include_ahead_behind: bool,
+    pub include_workdir_stats: bool,
+}
+
 impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
     fn from(val: GitHeadInfoInternal) -> Self {
         let reference_short = val
@@ -103,12 +116,9 @@ impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
     }
 }
 
-fn head_info(
-    repo: &git2::Repository,
-    options: &structs::GetGitInfoOptions,
-) -> Result<GitHeadInfoInternal> {
+fn head_info(repo: &git2::Repository, input_reference_name: &str) -> Result<GitHeadInfoInternal> {
     let detached = repo.head_detached().unwrap_or_default();
-    let reference = repo.find_reference(options.reference_name)?;
+    let reference = repo.find_reference(input_reference_name)?;
 
     let head_info = match reference.kind() {
         None => GitHeadInfoInternal {
@@ -144,7 +154,7 @@ fn head_info(
 
 fn file_status(
     repo: &git2::Repository,
-    options: &structs::GetGitInfoOptions,
+    options: &GetGitInfoOptionsInternal,
 ) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
     let status_show = match options.include_workdir_stats {
@@ -232,4 +242,43 @@ fn graph_ahead_behind(
         ahead: ahead_behind.0,
         behind: ahead_behind.1,
     })
+}
+
+fn configuration_overrided(
+    path: &Path,
+    git_info_options: &structs::GetGitInfoOptions,
+) -> Result<GetGitInfoOptionsInternal> {
+    let repo = git2::Repository::open(path)?;
+    let config = repo.config()?.snapshot()?;
+
+    Ok(GetGitInfoOptionsInternal {
+        include_submodules: config_bool_var(
+            &config,
+            "include-submodules",
+            git_info_options.include_submodules,
+        ),
+        include_untracked: config_bool_var(
+            &config,
+            "include-untracked",
+            git_info_options.include_untracked,
+        ),
+        refresh_status: config_bool_var(&config, "refresh-status", git_info_options.refresh_status),
+        include_ahead_behind: config_bool_var(
+            &config,
+            "include-ahead-behind",
+            git_info_options.include_ahead_behind,
+        ),
+        include_workdir_stats: config_bool_var(
+            &config,
+            "include-workdir-stats",
+            git_info_options.include_workdir_stats,
+        ),
+    })
+}
+
+#[inline]
+fn config_bool_var(config: &git2::Config, name: &'static str, default_value: bool) -> bool {
+    config
+        .get_bool(format!("{}.{}", env!("CARGO_BIN_NAME"), name).as_str())
+        .unwrap_or(default_value)
 }
