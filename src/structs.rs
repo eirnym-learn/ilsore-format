@@ -1,10 +1,13 @@
+use std::path;
+
 #[derive(Debug)]
-pub(crate) struct GetGitInfoOptions {
-    pub start_folder: Option<String>,
-    pub reference_name: String,
+pub(crate) struct GetGitInfoOptions<'a> {
+    pub start_folder: &'a Option<path::PathBuf>,
+    pub reference_name: &'a str,
     pub include_submodules: bool,
     pub include_untracked: bool,
-    pub no_refresh: bool,
+    pub refresh_status: bool,
+    pub include_ahead_behind: bool,
 }
 
 #[derive(Debug)]
@@ -64,18 +67,6 @@ pub(crate) struct ThemeSymbols {
     pub git_has_typechange: &'static str,
     pub git_has_unstaged: &'static str,
     pub git_has_staged: &'static str,
-}
-
-impl Default for GetGitInfoOptions {
-    fn default() -> Self {
-        GetGitInfoOptions {
-            start_folder: None,
-            reference_name: "HEAD".to_string(),
-            include_submodules: false,
-            include_untracked: true,
-            no_refresh: true,
-        }
-    }
 }
 
 impl ThemeSymbols {

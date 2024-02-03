@@ -57,9 +57,10 @@ fn process_repo(
             };
             let repo = repo_option.unwrap();
             let head_info_internal = head_info(&repo, options).ok_or_log();
-            let _ = branch_ahead_behind_result
-                .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
-
+            if options.include_ahead_behind {
+                let _ = branch_ahead_behind_result
+                    .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
+            };
             let _ = head_info_result.insert(head_info_internal.map(|h| h.into()));
         });
 
@@ -107,7 +108,7 @@ fn head_info(
     options: &structs::GetGitInfoOptions,
 ) -> Result<GitHeadInfoInternal> {
     let detached = repo.head_detached().unwrap_or_default();
-    let reference = repo.find_reference(options.reference_name.as_str())?;
+    let reference = repo.find_reference(options.reference_name)?;
 
     let head_info = match reference.kind() {
         None => GitHeadInfoInternal {
@@ -147,7 +148,7 @@ fn file_status(
 ) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
     status_options.show(git2::StatusShow::IndexAndWorkdir);
-    status_options.no_refresh(options.no_refresh);
+    status_options.no_refresh(options.refresh_status);
     status_options.exclude_submodules(!options.include_submodules);
     status_options.include_ignored(false);
     status_options.include_unreadable(false);
