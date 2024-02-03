@@ -37,7 +37,7 @@ pub(crate) struct Cli {
     pub git_include_submodules: bool,
 
     /// If git status should include untracked files
-    #[arg(long, default_value_t = true, action=clap::ArgAction::SetFalse)]
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_exclude_untracked: bool,
 
     /// If git status should softly refresh indices
@@ -45,7 +45,7 @@ pub(crate) struct Cli {
     pub git_refresh_status: bool,
 
     /// If git status won't check tracking branch
-    #[arg(long, default_value_t = true, action=clap::ArgAction::SetFalse)]
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_exclude_ahead_behind: bool,
 
     /// Exclude workdir file stats leaving query index only

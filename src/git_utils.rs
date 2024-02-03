@@ -46,7 +46,6 @@ fn process_repo(
     input_options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
     let options = configuration_overrided(path, input_options)?;
-    println!("{:#?}", options);
 
     let mut head_info_result: Option<Option<structs::GitHeadInfo>> = Some(None);
     let mut branch_ahead_behind_result: Option<Option<structs::GitBranchAheadBehind>> = Some(None);
@@ -61,10 +60,15 @@ fn process_repo(
             let repo = repo_option.unwrap();
             let head_info_internal = head_info(&repo, input_options.reference_name).ok_or_log();
 
-            if options.include_ahead_behind {
-                let _ = branch_ahead_behind_result
-                    .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
+            let ahead_behind = match options.include_ahead_behind {
+                true => graph_ahead_behind(&repo, &head_info_internal).ok_or_log(),
+                false => Some(structs::GitBranchAheadBehind {
+                    ahead: 0,
+                    behind: 0,
+                }),
             };
+
+            let _ = branch_ahead_behind_result.insert(ahead_behind);
             let _ = head_info_result.insert(head_info_internal.map(|h| h.into()));
         });
 
