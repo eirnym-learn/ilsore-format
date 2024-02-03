@@ -88,17 +88,17 @@ struct GitHeadInfoInternal {
     pub detached: bool,
 }
 
-impl Into<structs::GitHeadInfo> for GitHeadInfoInternal {
-    fn into(self) -> structs::GitHeadInfo {
-        let reference_short = self
+impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
+    fn from(val: GitHeadInfoInternal) -> Self {
+        let reference_short = val
             .reference_name
             .map(|v| v.as_str().last_part().to_string());
-        let oid_short = self.oid.map(|v| v.to_string()[0..8].to_string());
+        let oid_short = val.oid.map(|v| v.to_string()[0..8].to_string());
 
         structs::GitHeadInfo {
             reference_short,
             oid_short,
-            detached: self.detached,
+            detached: val.detached,
         }
     }
 }
