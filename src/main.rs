@@ -16,7 +16,7 @@ mod util;
 fn main() -> error::Result<()> {
     error::setup_errors();
     args::init_argument_parser();
-    let args = args::Cli::parse();
+    let args = args::Args::parse();
 
     let theme_data = theme_data(&args);
     let symbols = args.symbols();
@@ -26,7 +26,7 @@ fn main() -> error::Result<()> {
     Ok(())
 }
 
-fn theme_data(args: &args::Cli) -> structs::ThemeData {
+fn theme_data(args: &args::Args) -> structs::ThemeData {
     let mut mut_hostname: Option<String> = Some(Default::default());
     let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
 

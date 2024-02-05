@@ -15,7 +15,7 @@ type ThemeFunction =
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-pub(crate) struct Cli {
+pub(crate) struct Args {
     /// Set if hostname is already known
     #[arg(long, value_name = "HOSTNAME", default_value = None)]
     pub static_hostname: Option<String>,
@@ -105,7 +105,7 @@ pub(crate) fn init_argument_parser() {
     });
 }
 
-impl Cli {
+impl Args {
     pub fn symbols(&self) -> &structs::ThemeSymbols {
         &THEME_SYMBOLS.get().expect("Uninitialized theme symbols")[self.theme_symbols]
     }
