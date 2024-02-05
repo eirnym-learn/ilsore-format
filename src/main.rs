@@ -14,10 +14,10 @@ mod user_host;
 mod util;
 
 fn main() -> error::Result<()> {
-    error::setup_errors();
     args::init_argument_parser();
     let args = args::Args::parse();
 
+    error::setup_errors(args.error_output);
     let theme_data = theme_data(&args);
     let symbols = args.symbols();
 
