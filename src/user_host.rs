@@ -1,9 +1,7 @@
 use crate::error::MapLog;
-pub fn hostname() -> String {
-    return gethostname::gethostname()
-        .to_str()
-        .unwrap_or_default()
-        .to_string();
+
+pub fn hostname() -> Option<String> {
+    hostname::get().ok_or_log().and_then(|s| s.into_string().ok())
 }
 
 pub fn username() -> Option<String> {

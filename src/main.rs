@@ -27,8 +27,15 @@ fn main() -> error::Result<()> {
 }
 
 fn theme_data(args: &args::Args) -> structs::ThemeData {
-    let mut mut_hostname: Option<String> = Some(Default::default());
+    let mut mut_hostname: Option<Option<String>> = Some(None);
     let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
+
+    let fast_hostname = args
+        .static_hostname
+        .clone()
+        .or_else(|| std::env::var("HOST").ok_or_log()) // zsh and tcsh
+        .or_else(|| std::env::var("HOSTNAME").ok_or_log()) // bash
+        .or_else(|| std::env::var("COMPUTERNAME").ok_or_log()); // windows
 
     let git_info_options = structs::GetGitInfoOptions {
         start_folder: &args.git_start_folder,
@@ -40,10 +47,10 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
         include_workdir_stats: !args.git_exclude_workdir_stats,
     };
 
-    if args.static_hostname.is_none() || !args.disable_git {
+    if fast_hostname.is_none() || !args.disable_git {
         thread::scope(|s| {
             s.spawn(|| {
-                if args.static_hostname.is_none() {
+                if fast_hostname.is_none() {
                     let _ = mut_hostname.insert(user_host::hostname());
                 }
             });
@@ -56,16 +63,19 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
             });
         });
     }
-    let hostname = if args.static_hostname.is_some() {
-        &args.static_hostname
-    } else {
-        &mut_hostname
-    };
+    let hostname = fast_hostname
+        .as_ref()
+        .or(mut_hostname.flatten().as_ref())
+        .cloned();
+    //        &args.static_hostname
+    //   } else {
+    //       &mut_hostname
+    //   };
 
     structs::ThemeData {
         last_exit_status: args.last_exit_status,
         datetime: date_time::date_time(),
-        hostname: hostname.clone(),
+        hostname,
         username: user_host::username(),
         python: python_status::python_info(),
         git: git_info.flatten(),
