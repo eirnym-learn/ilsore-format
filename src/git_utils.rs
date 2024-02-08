@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::env;
 use std::path;
 use std::path::Path;
+use std::thread;
 
 use crate::error;
 use crate::error::MapLog;
@@ -44,26 +45,38 @@ fn process_repo(
     path: &Path,
     options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
-    let repo = git2::Repository::open(path)?;
-    let head_info_internal = head_info(&repo, options).ok_or_log();
-    let file_status = file_status(&repo, options).ok_or_log();
-    let branch_ahead_behind = graph_ahead_behind(&repo, &head_info_internal).ok_or_log();
+    let mut head_info_result: Option<Option<structs::GitHeadInfo>> = Some(None);
+    let mut branch_ahead_behind_result: Option<Option<structs::GitBranchAheadBehind>> = Some(None);
+    let mut file_status_result: Option<Option<structs::GitFileStatus>> = Some(None);
 
-    let head_info = head_info_internal.map(|h| {
-        let reference_short = h.reference_name.map(|v| v.as_str().last_part().to_string());
-        let oid_short = h.oid.map(|v| v.to_string()[0..8].to_string());
+    thread::scope(|s| {
+        s.spawn(|| {
+            let repo_option = git2::Repository::open(path).ok_or_log();
+            if repo_option.is_none() {
+                return;
+            };
+            let repo = repo_option.unwrap();
+            let head_info_internal = head_info(&repo, options).ok_or_log();
+            let _ = branch_ahead_behind_result
+                .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
 
-        structs::GitHeadInfo {
-            reference_short,
-            oid_short,
-            detached: h.detached,
-        }
+            let _ = head_info_result.insert(head_info_internal.map(|h| h.into()));
+        });
+
+        s.spawn(|| {
+            let repo_option = git2::Repository::open(path).ok_or_log();
+            if repo_option.is_none() {
+                return;
+            };
+            let repo = repo_option.unwrap();
+            let _ = file_status_result.insert(file_status(&repo, options).ok_or_log());
+        });
     });
 
     Ok(structs::GitOutputOptions {
-        head_info,
-        file_status,
-        branch_ahead_behind,
+        head_info: head_info_result.flatten(),
+        file_status: file_status_result.flatten(),
+        branch_ahead_behind: branch_ahead_behind_result.flatten(),
     })
 }
 
@@ -72,6 +85,21 @@ struct GitHeadInfoInternal {
     pub reference_name: Option<String>,
     pub oid: Option<git2::Oid>,
     pub detached: bool,
+}
+
+impl Into<structs::GitHeadInfo> for GitHeadInfoInternal {
+    fn into(self) -> structs::GitHeadInfo {
+        let reference_short = self
+            .reference_name
+            .map(|v| v.as_str().last_part().to_string());
+        let oid_short = self.oid.map(|v| v.to_string()[0..8].to_string());
+
+        structs::GitHeadInfo {
+            reference_short,
+            oid_short,
+            detached: self.detached,
+        }
+    }
 }
 
 fn head_info(
