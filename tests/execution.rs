@@ -12,11 +12,11 @@ fn help() -> Result<(), Box<dyn std::error::Error>> {
     let path = {
         // TODO: create inner files
         // std::fs::create_dir(&p.join(".git"))?;
-        tmp_for("help")?
+        tmp_for("--help")?
     };
 
     let result = Command::new(bin_path())
-        .arg("help")
+        .arg("--help")
         //   .current_dir(env::current_dir()?)
         .current_dir(path)
         .output()?;
