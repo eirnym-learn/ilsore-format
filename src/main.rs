@@ -30,6 +30,16 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
     let mut mut_hostname: Option<String> = Some(Default::default());
     let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
 
+    let git_info_options = structs::GetGitInfoOptions {
+        start_folder: &args.git_start_folder,
+        reference_name: args.git_reference.as_deref().unwrap_or("HEAD"),
+        include_submodules: args.git_include_submodules,
+        include_untracked: !args.git_exclude_untracked,
+        refresh_status: args.git_refresh_status,
+        include_ahead_behind: !args.git_exclude_ahead_behind,
+        include_workdir_stats: !args.git_exclude_workdir_stats,
+    };
+
     if args.static_hostname.is_none() || !args.disable_git {
         thread::scope(|s| {
             s.spawn(|| {
@@ -40,10 +50,8 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
 
             s.spawn(|| {
                 if !args.disable_git {
-                    let _ = git_info.insert(
-                        git_utils::process_current_dir(&structs::GetGitInfoOptions::default())
-                            .ok_or_log(),
-                    );
+                    let _ = git_info
+                        .insert(git_utils::process_current_dir(&git_info_options).ok_or_log());
                 }
             });
         });

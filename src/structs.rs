@@ -1,10 +1,52 @@
+use std::path;
+
+/// Options for git status reporter
 #[derive(Debug)]
-pub(crate) struct GetGitInfoOptions {
-    pub start_folder: Option<String>,
-    pub reference_name: String,
+pub(crate) struct GetGitInfoOptions<'a> {
+    /// Start forlder. None value means current folder
+    pub start_folder: &'a Option<path::PathBuf>,
+
+    /// Reference name to ask information for
+    pub reference_name: &'a str,
+
+    /// Flag if git status should include submodules information
     pub include_submodules: bool,
+
+    /// Flag if git status should include untracked files
     pub include_untracked: bool,
-    pub no_refresh: bool,
+
+    /// Flag if git status should do soft refresh
+    pub refresh_status: bool,
+
+    /// Flag if git status should include ahead/behind information
+    pub include_ahead_behind: bool,
+
+    /// Flag if git status should include workdir check
+    pub include_workdir_stats: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct ThemeData {
+    pub last_exit_status: u8,
+    pub datetime: DateTime,
+    pub hostname: Option<String>,
+    pub username: Option<String>,
+    pub python: Option<String>,
+    pub git: Option<GitOutputOptions>,
+}
+
+#[derive(Debug)]
+pub(crate) struct ThemeSymbols {
+    pub git_branch: &'static str,
+    pub git_has_no_upstream: &'static str,
+    pub git_branch_detached: &'static str,
+    pub git_is_ahead: &'static str,
+    pub git_is_behind: &'static str,
+    pub git_has_conflict: &'static str,
+    pub git_has_untracked: &'static str,
+    pub git_has_typechange: &'static str,
+    pub git_has_unstaged: &'static str,
+    pub git_has_staged: &'static str,
 }
 
 #[derive(Debug)]
@@ -18,16 +60,6 @@ pub(crate) struct GitOutputOptions {
 pub(crate) struct DateTime {
     pub date: String,
     pub time: String,
-}
-
-#[derive(Debug)]
-pub(crate) struct ThemeData {
-    pub last_exit_status: u8,
-    pub datetime: DateTime,
-    pub hostname: Option<String>,
-    pub username: Option<String>,
-    pub python: Option<String>,
-    pub git: Option<GitOutputOptions>,
 }
 
 #[derive(Debug)]
@@ -51,33 +83,6 @@ pub(crate) struct GitBranchAheadBehind {
     pub ahead: usize,
     pub behind: usize,
 }
-
-#[derive(Debug)]
-pub(crate) struct ThemeSymbols {
-    pub git_branch: &'static str,
-    pub git_has_no_upstream: &'static str,
-    pub git_branch_detached: &'static str,
-    pub git_is_ahead: &'static str,
-    pub git_is_behind: &'static str,
-    pub git_has_conflict: &'static str,
-    pub git_has_untracked: &'static str,
-    pub git_has_typechange: &'static str,
-    pub git_has_unstaged: &'static str,
-    pub git_has_staged: &'static str,
-}
-
-impl Default for GetGitInfoOptions {
-    fn default() -> Self {
-        GetGitInfoOptions {
-            start_folder: None,
-            reference_name: "HEAD".to_string(),
-            include_submodules: false,
-            include_untracked: true,
-            no_refresh: true,
-        }
-    }
-}
-
 impl ThemeSymbols {
     pub(crate) fn utf8_power() -> Self {
         ThemeSymbols {

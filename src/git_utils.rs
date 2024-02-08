@@ -43,8 +43,10 @@ fn git_subfolder(options: &structs::GetGitInfoOptions) -> Result<Option<path::Pa
 
 fn process_repo(
     path: &Path,
-    options: &structs::GetGitInfoOptions,
+    input_options: &structs::GetGitInfoOptions,
 ) -> Result<structs::GitOutputOptions> {
+    let options = configuration_overrided(path, input_options)?;
+
     let mut head_info_result: Option<Option<structs::GitHeadInfo>> = Some(None);
     let mut branch_ahead_behind_result: Option<Option<structs::GitBranchAheadBehind>> = Some(None);
     let mut file_status_result: Option<Option<structs::GitFileStatus>> = Some(None);
@@ -56,10 +58,17 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let head_info_internal = head_info(&repo, options).ok_or_log();
-            let _ = branch_ahead_behind_result
-                .insert(graph_ahead_behind(&repo, &head_info_internal).ok_or_log());
+            let head_info_internal = head_info(&repo, input_options.reference_name).ok_or_log();
 
+            let ahead_behind = match options.include_ahead_behind {
+                true => graph_ahead_behind(&repo, &head_info_internal).ok_or_log(),
+                false => Some(structs::GitBranchAheadBehind {
+                    ahead: 0,
+                    behind: 0,
+                }),
+            };
+
+            let _ = branch_ahead_behind_result.insert(ahead_behind);
             let _ = head_info_result.insert(head_info_internal.map(|h| h.into()));
         });
 
@@ -69,7 +78,7 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let _ = file_status_result.insert(file_status(&repo, options).ok_or_log());
+            let _ = file_status_result.insert(file_status(&repo, &options).ok_or_log());
         });
     });
 
@@ -87,27 +96,33 @@ struct GitHeadInfoInternal {
     pub detached: bool,
 }
 
-impl Into<structs::GitHeadInfo> for GitHeadInfoInternal {
-    fn into(self) -> structs::GitHeadInfo {
-        let reference_short = self
+#[derive(Debug)]
+struct GetGitInfoOptionsInternal {
+    pub include_submodules: bool,
+    pub include_untracked: bool,
+    pub refresh_status: bool,
+    pub include_ahead_behind: bool,
+    pub include_workdir_stats: bool,
+}
+
+impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
+    fn from(val: GitHeadInfoInternal) -> Self {
+        let reference_short = val
             .reference_name
             .map(|v| v.as_str().last_part().to_string());
-        let oid_short = self.oid.map(|v| v.to_string()[0..8].to_string());
+        let oid_short = val.oid.map(|v| v.to_string()[0..8].to_string());
 
         structs::GitHeadInfo {
             reference_short,
             oid_short,
-            detached: self.detached,
+            detached: val.detached,
         }
     }
 }
 
-fn head_info(
-    repo: &git2::Repository,
-    options: &structs::GetGitInfoOptions,
-) -> Result<GitHeadInfoInternal> {
+fn head_info(repo: &git2::Repository, input_reference_name: &str) -> Result<GitHeadInfoInternal> {
     let detached = repo.head_detached().unwrap_or_default();
-    let reference = repo.find_reference(options.reference_name.as_str())?;
+    let reference = repo.find_reference(input_reference_name)?;
 
     let head_info = match reference.kind() {
         None => GitHeadInfoInternal {
@@ -143,11 +158,16 @@ fn head_info(
 
 fn file_status(
     repo: &git2::Repository,
-    options: &structs::GetGitInfoOptions,
+    options: &GetGitInfoOptionsInternal,
 ) -> Result<structs::GitFileStatus> {
     let status_options = &mut git2::StatusOptions::new();
-    status_options.show(git2::StatusShow::IndexAndWorkdir);
-    status_options.no_refresh(options.no_refresh);
+    let status_show = match options.include_workdir_stats {
+        true => git2::StatusShow::IndexAndWorkdir,
+        false => git2::StatusShow::Index,
+    };
+    status_options.show(status_show);
+    status_options.no_refresh(options.refresh_status);
+    status_options.update_index(options.refresh_status);
     status_options.exclude_submodules(!options.include_submodules);
     status_options.include_ignored(false);
     status_options.include_unreadable(false);
@@ -226,4 +246,43 @@ fn graph_ahead_behind(
         ahead: ahead_behind.0,
         behind: ahead_behind.1,
     })
+}
+
+fn configuration_overrided(
+    path: &Path,
+    git_info_options: &structs::GetGitInfoOptions,
+) -> Result<GetGitInfoOptionsInternal> {
+    let repo = git2::Repository::open(path)?;
+    let config = repo.config()?.snapshot()?;
+
+    Ok(GetGitInfoOptionsInternal {
+        include_submodules: config_bool_var(
+            &config,
+            "include-submodules",
+            git_info_options.include_submodules,
+        ),
+        include_untracked: config_bool_var(
+            &config,
+            "include-untracked",
+            git_info_options.include_untracked,
+        ),
+        refresh_status: config_bool_var(&config, "refresh-status", git_info_options.refresh_status),
+        include_ahead_behind: config_bool_var(
+            &config,
+            "include-ahead-behind",
+            git_info_options.include_ahead_behind,
+        ),
+        include_workdir_stats: config_bool_var(
+            &config,
+            "include-workdir-stats",
+            git_info_options.include_workdir_stats,
+        ),
+    })
+}
+
+#[inline]
+fn config_bool_var(config: &git2::Config, name: &'static str, default_value: bool) -> bool {
+    config
+        .get_bool(format!("{}.{}", env!("CARGO_BIN_NAME"), name).as_str())
+        .unwrap_or(default_value)
 }

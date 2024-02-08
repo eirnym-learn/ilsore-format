@@ -33,16 +33,24 @@ pub(crate) struct Cli {
     pub git_start_folder: Option<path::PathBuf>,
 
     /// If git status should include submodules
-    #[arg(long, value_name = "INCLUDE", default_value_t = false, action=clap::ArgAction::SetTrue)]
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_include_submodules: bool,
 
     /// If git status should include untracked files
-    #[arg(long, value_name = "INCLUDE", default_value_t = true, action=clap::ArgAction::SetFalse)]
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_exclude_untracked: bool,
 
     /// If git status should softly refresh indices
-    #[arg(long, value_name = "INCLUDE", default_value_t = false, action=clap::ArgAction::SetTrue)]
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
     pub git_refresh_status: bool,
+
+    /// If git status won't check tracking branch
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
+    pub git_exclude_ahead_behind: bool,
+
+    /// Exclude workdir file stats leaving query index only
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
+    pub git_exclude_workdir_stats: bool,
 
     /// Last command exit status
     #[arg(long, value_name = "ERROR_CODE", default_value_t = 0)]
