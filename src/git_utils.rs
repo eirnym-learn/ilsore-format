@@ -106,6 +106,7 @@ struct GetGitInfoOptionsInternal {
 }
 
 impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
+    // TODO: why From, not Into?
     fn from(val: GitHeadInfoInternal) -> Self {
         let reference_short = val
             .reference_name
