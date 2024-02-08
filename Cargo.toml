@@ -2,8 +2,7 @@
 name = "ilsore-format"
 version = "1.0.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license-file = "LICENSE.txt"
 
 [dependencies]
 git2 = "0.18.1"

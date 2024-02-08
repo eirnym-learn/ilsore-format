@@ -28,11 +28,13 @@ fn main() -> error::Result<()> {
 
 fn theme_data(args: &args::Args) -> structs::ThemeData {
     let mut mut_hostname: Option<Option<String>> = Some(None);
-    let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
+    let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None); // TODO: Option in
+                                                                              // Option may be just
+                                                                              // option
 
     let fast_hostname = args
         .static_hostname
-        .clone()
+        .clone()  // TODO: Clone
         .or_else(|| std::env::var("HOST").ok_or_log()) // zsh and tcsh
         .or_else(|| std::env::var("HOSTNAME").ok_or_log()) // bash
         .or_else(|| std::env::var("COMPUTERNAME").ok_or_log()); // windows
