@@ -1,19 +1,21 @@
 use std::path;
 use std::sync::OnceLock;
 
+use crate::ilsore_format;
+use crate::ilsore_format_color;
 use crate::structs;
 
-pub(crate) static THEME_SYMBOLS: OnceLock<
-    enum_map::EnumMap<ThemeSymbolsNames, structs::ThemeSymbols>,
-> = OnceLock::new();
+static THEME_SYMBOLS: OnceLock<enum_map::EnumMap<ThemeSymbolsNames, structs::ThemeSymbols>> =
+    OnceLock::new();
+
+static THEME_NAMES: OnceLock<enum_map::EnumMap<ThemeNames, ThemeFunction>> = OnceLock::new();
+
+type ThemeFunction =
+    for<'a, 'b> fn(&'a structs::ThemeData, &'b structs::ThemeSymbols) -> std::string::String;
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub(crate) struct Cli {
-    /// Color output
-    #[arg(long, default_value_t = false)]
-    pub color: bool,
-
     /// Set if hostname is already known
     #[arg(long, value_name = "HOSTNAME", default_value = None)]
     pub static_hostname: Option<String>,
@@ -49,6 +51,10 @@ pub(crate) struct Cli {
     /// Theme symbols to use
     #[arg(long, value_name = "SYMBOLS", default_value_t, value_enum)]
     pub theme_symbols: ThemeSymbolsNames,
+
+    /// Theme to use
+    #[arg(long, value_name = "THEME", default_value_t, value_enum)]
+    pub theme_name: ThemeNames,
 }
 
 #[derive(clap::ValueEnum, Clone)] // required for clap::ValueEnum
@@ -63,7 +69,25 @@ pub(crate) enum ThemeSymbolsNames {
     Ascii,
 }
 
-pub(crate) fn init_theme_symbols() {
+#[derive(clap::ValueEnum, Clone)] // required for clap::ValueEnum
+#[derive(Debug)] // for clap parser
+#[derive(Default)] // for set default in easier way
+#[derive(enum_map::Enum, Copy)] // for EnumMap[] operator
+#[clap(rename_all = "kebab_case")]
+pub(crate) enum ThemeNames {
+    #[default]
+    IlsoreColor,
+    IlsoreNoColor,
+}
+
+pub(crate) fn init_argument_parser() {
+    let _ = THEME_NAMES.get_or_init(|| {
+        enum_map::enum_map! {
+            ThemeNames::IlsoreColor => ilsore_format_color::format_ilsore_color,
+            ThemeNames::IlsoreNoColor => ilsore_format::format_ilsore_no_color,
+        }
+    });
+
     let _ = THEME_SYMBOLS.get_or_init(|| {
         enum_map::enum_map! {
             ThemeSymbolsNames::Utf8Power => structs::ThemeSymbols::utf8_power(),
@@ -75,6 +99,10 @@ pub(crate) fn init_theme_symbols() {
 
 impl Cli {
     pub fn symbols(&self) -> &structs::ThemeSymbols {
-        &THEME_SYMBOLS.get().expect("Uninitialized symbols")[self.theme_symbols]
+        &THEME_SYMBOLS.get().expect("Uninitialized theme symbols")[self.theme_symbols]
+    }
+
+    pub fn theme(&self) -> ThemeFunction {
+        THEME_NAMES.get().expect("Uninitialized theme names")[self.theme_name]
     }
 }
