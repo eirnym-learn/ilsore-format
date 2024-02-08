@@ -69,10 +69,6 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
         .as_ref()
         .or(mut_hostname.flatten().as_ref())
         .cloned();
-    //        &args.static_hostname
-    //   } else {
-    //       &mut_hostname
-    //   };
 
     structs::ThemeData {
         last_exit_status: args.last_exit_status,
