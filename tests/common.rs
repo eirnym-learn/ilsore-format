@@ -5,7 +5,7 @@ pub use std::path::Path;
 use std::path::PathBuf;
 
 pub fn bin_path() -> &'static Path {
-    const BIN_PATH: &str = env!("CARGO_BIN_EXE_upfind");
+    const BIN_PATH: &str = env!("CARGO_BIN_EXE_ilsore-format");
     Path::new(BIN_PATH)
 }
 
