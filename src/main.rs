@@ -34,7 +34,7 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
 
     let fast_hostname = args
         .static_hostname
-        .clone()  // TODO: Clone
+        .clone() // TODO: Clone
         .or_else(|| std::env::var("HOST").ok_or_log()) // zsh and tcsh
         .or_else(|| std::env::var("HOSTNAME").ok_or_log()) // bash
         .or_else(|| std::env::var("COMPUTERNAME").ok_or_log()); // windows

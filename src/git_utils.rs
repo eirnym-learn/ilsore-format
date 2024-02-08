@@ -105,7 +105,8 @@ struct GetGitInfoOptionsInternal {
     pub include_workdir_stats: bool,
 }
 
-impl From<GitHeadInfoInternal> for structs::GitHeadInfo { // TODO: why From, not Into?
+impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
+    // TODO: why From, not Into?
     fn from(val: GitHeadInfoInternal) -> Self {
         let reference_short = val
             .reference_name

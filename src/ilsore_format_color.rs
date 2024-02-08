@@ -51,12 +51,14 @@ pub(crate) fn format_ilsore_color(
 }
 
 #[inline]
-fn format_color(color: &str) -> String { // TODO: write macro
+fn format_color(color: &str) -> String {
+    // TODO: write macro
     format!("%{{%F{{{color}}}%}}")
 }
 
 #[inline]
-fn format_color_bold(color: &str) -> String { // TODO: write macro
+fn format_color_bold(color: &str) -> String {
+    // TODO: write macro
     format!("%{{%B%F{{{color}}}%}}")
 }
 
