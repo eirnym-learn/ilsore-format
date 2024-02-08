@@ -15,10 +15,17 @@ pub(crate) fn format_ilsore_no_color(
 
     let git = data.git.as_ref().map(|v| format_ilsore_git(v, symbols));
 
+    let last_status = if data.last_exit_status != 0 {
+        format!("[{}]", data.last_exit_status)
+    } else {
+        "".to_string()
+    };
+
     format!(
-        "{}{}{}{}",
+        "{}{}{}{}{}\n%~>",
         date_time,
         user_host,
+        last_status,
         python.as_deref().unwrap_or_default(),
         git.as_deref().unwrap_or_default(),
     )
@@ -45,9 +52,9 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
 }
 
 #[inline]
-fn format_ilsore_git_head_info<'a>(
-    head_info: &'a Option<structs::GitHeadInfo>,
-    symbols: &'a structs::ThemeSymbols,
+fn format_ilsore_git_head_info(
+    head_info: &Option<structs::GitHeadInfo>,
+    symbols: &structs::ThemeSymbols,
 ) -> Option<String> {
     head_info.as_ref().and_then(|h| {
         h.reference_short
