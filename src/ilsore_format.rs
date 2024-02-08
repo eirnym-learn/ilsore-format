@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::structs;
 
 pub(crate) fn format_ilsore_no_color(
@@ -15,10 +17,10 @@ pub(crate) fn format_ilsore_no_color(
 
     let git = data.git.as_ref().map(|v| format_ilsore_git(v, symbols));
 
-    let last_status = if data.last_exit_status != 0 {
-        format!("[{}]", data.last_exit_status)
+    let last_status: Cow<str> = if data.last_exit_status != 0 {
+        format!("[{}]", data.last_exit_status).into()
     } else {
-        "".to_string()
+        Cow::Borrowed("")
     };
 
     format!(
@@ -32,9 +34,12 @@ pub(crate) fn format_ilsore_no_color(
 }
 
 #[inline]
-fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeSymbols) -> String {
+fn format_ilsore_git(
+    data: &structs::GitOutputOptions,
+    symbols: &structs::ThemeSymbols,
+) -> Cow<'static, str> {
     if data.head_info.is_none() {
-        return "".to_string();
+        return Cow::Borrowed("");
     }
 
     format!(
@@ -49,6 +54,7 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
             symbols
         )
     )
+    .into()
 }
 
 #[inline]

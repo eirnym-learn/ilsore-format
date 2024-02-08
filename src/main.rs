@@ -56,16 +56,12 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
             });
         });
     }
-    let hostname = if args.static_hostname.is_some() {
-        &args.static_hostname
-    } else {
-        &mut_hostname
-    };
+    let hostname = args.static_hostname.clone().or(mut_hostname);
 
     structs::ThemeData {
         last_exit_status: args.last_exit_status,
         datetime: date_time::date_time(),
-        hostname: hostname.clone(),
+        hostname: hostname,
         username: user_host::username(),
         python: python_status::python_info(),
         git: git_info.flatten(),
