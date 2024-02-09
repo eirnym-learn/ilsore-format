@@ -15,7 +15,7 @@ type ThemeFunction =
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-pub(crate) struct Cli {
+pub(crate) struct Args {
     /// Set if hostname is already known
     #[arg(long, value_name = "HOSTNAME", default_value = None)]
     pub static_hostname: Option<String>,
@@ -58,11 +58,15 @@ pub(crate) struct Cli {
 
     /// Theme symbols to use
     #[arg(long, value_name = "SYMBOLS", default_value_t, value_enum)]
-    pub theme_symbols: ThemeSymbolsNames,
+    theme_symbols: ThemeSymbolsNames,
 
     /// Theme to use
     #[arg(long, value_name = "THEME", default_value_t, value_enum)]
-    pub theme_name: ThemeNames,
+    theme_name: ThemeNames,
+
+    /// Output errros for debugging purposes
+    #[arg(long, default_value_t = false, action=clap::ArgAction::SetTrue)]
+    pub error_output: bool,
 }
 
 #[derive(clap::ValueEnum, Clone)] // required for clap::ValueEnum
@@ -105,7 +109,7 @@ pub(crate) fn init_argument_parser() {
     });
 }
 
-impl Cli {
+impl Args {
     pub fn symbols(&self) -> &structs::ThemeSymbols {
         &THEME_SYMBOLS.get().expect("Uninitialized theme symbols")[self.theme_symbols]
     }

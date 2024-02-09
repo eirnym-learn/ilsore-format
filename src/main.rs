@@ -1,5 +1,6 @@
 use clap::Parser;
 use error::MapLog;
+use std::borrow::Cow;
 use std::thread;
 
 mod args;
@@ -14,10 +15,10 @@ mod user_host;
 mod util;
 
 fn main() -> error::Result<()> {
-    error::setup_errors();
     args::init_argument_parser();
-    let args = args::Cli::parse();
+    let args = args::Args::parse();
 
+    error::setup_errors(args.error_output);
     let theme_data = theme_data(&args);
     let symbols = args.symbols();
 
@@ -26,9 +27,17 @@ fn main() -> error::Result<()> {
     Ok(())
 }
 
-fn theme_data(args: &args::Cli) -> structs::ThemeData {
-    let mut mut_hostname: Option<String> = Some(Default::default());
-    let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None);
+fn theme_data(args: &args::Args) -> structs::ThemeData {
+    let mut mut_hostname: Option<String> = None;
+    let mut git_info: Option<structs::GitOutputOptions> = None;
+
+    let fast_hostname = args
+        .static_hostname
+        .as_ref()
+        .map(Cow::from)
+        .or_else(|| std::env::var("HOST").map(Cow::from).ok_or_log()) // zsh and tcsh
+        .or_else(|| std::env::var("HOSTNAME").map(Cow::from).ok_or_log()) // bash
+        .or_else(|| std::env::var("COMPUTERNAME").map(Cow::from).ok_or_log()); // windows
 
     let git_info_options = structs::GetGitInfoOptions {
         start_folder: &args.git_start_folder,
@@ -40,30 +49,30 @@ fn theme_data(args: &args::Cli) -> structs::ThemeData {
         include_workdir_stats: !args.git_exclude_workdir_stats,
     };
 
-    if args.static_hostname.is_none() || !args.disable_git {
+    if fast_hostname.is_none() || !args.disable_git {
         thread::scope(|s| {
             s.spawn(|| {
-                if args.static_hostname.is_none() {
-                    let _ = mut_hostname.insert(user_host::hostname());
+                if fast_hostname.is_none() {
+                    mut_hostname = user_host::hostname();
                 }
             });
 
             s.spawn(|| {
                 if !args.disable_git {
-                    let _ = git_info
-                        .insert(git_utils::process_current_dir(&git_info_options).ok_or_log());
+                    git_info = git_utils::process_current_dir(&git_info_options).ok_or_log();
                 }
             });
         });
     }
-    let hostname = args.static_hostname.clone().or(mut_hostname);
+
+    let hostname: Option<String> = fast_hostname.map(|s| s.to_string()).or(mut_hostname);
 
     structs::ThemeData {
         last_exit_status: args.last_exit_status,
         datetime: date_time::date_time(),
-        hostname: hostname,
+        hostname,
         username: user_host::username(),
         python: python_status::python_info(),
-        git: git_info.flatten(),
+        git: git_info,
     }
 }

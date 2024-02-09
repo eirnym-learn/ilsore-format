@@ -25,7 +25,7 @@ pub(crate) struct GetGitInfoOptions<'a> {
     pub include_workdir_stats: bool,
 }
 
-#[derive(Debug)]
+/// Data to be passed to theme processor
 pub(crate) struct ThemeData {
     pub last_exit_status: u8,
     pub datetime: DateTime,
@@ -56,10 +56,9 @@ pub(crate) struct GitOutputOptions {
     pub branch_ahead_behind: Option<GitBranchAheadBehind>,
 }
 
-#[derive(Debug)]
 pub(crate) struct DateTime {
-    pub date: String,
-    pub time: String,
+    pub date: Box<dyn std::fmt::Display>,
+    pub time: Box<dyn std::fmt::Display>,
 }
 
 #[derive(Debug)]

@@ -5,7 +5,7 @@ use std::sync::OnceLock;
 pub(crate) static APP_NAME: OnceLock<String> = OnceLock::new();
 
 /// Flag if error required
-pub(crate) static VERBOSE_ERRORS: bool = false;
+pub(crate) static VERBOSE_ERRORS: OnceLock<bool> = OnceLock::new();
 
 #[derive(Debug)]
 pub(crate) enum Error {
@@ -77,7 +77,7 @@ where
     /// err.log();
     /// ```
     fn log(&self) {
-        if VERBOSE_ERRORS {
+        if *VERBOSE_ERRORS.get().unwrap() {
             let app_name = APP_NAME.get().unwrap();
             eprintln!("{app_name}:  {self:}");
         }
@@ -111,9 +111,11 @@ where
     }
 }
 
-pub(crate) fn setup_errors() {
+pub(crate) fn setup_errors(error_output: bool) {
+    let _ = VERBOSE_ERRORS.get_or_init(|| error_output);
+
     let _ = APP_NAME.get_or_init(|| {
-        if VERBOSE_ERRORS {
+        if error_output {
             env::current_exe()
                 .map_or_else(
                     |_| Some(env!("CARGO_BIN_NAME").to_string()),
