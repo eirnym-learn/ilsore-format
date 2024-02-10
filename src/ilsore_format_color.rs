@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::structs;
 
 static RESET_COLOR: &str = "%{[0m%}";
@@ -29,14 +31,15 @@ pub(crate) fn format_ilsore_color(
 
     let git = data.git.as_ref().map(|v| format_ilsore_git(v, symbols));
 
-    let last_status = if data.last_exit_status != 0 {
+    let last_status: Cow<str> = if data.last_exit_status != 0 {
         format!(
             "[{}{}{RESET_COLOR}]",
             format_color_bold("196"),
             data.last_exit_status
         )
+        .into()
     } else {
-        "".to_string()
+        Cow::Borrowed("") // same size as String on stack but no heap alloc.
     };
 
     format!(
@@ -63,9 +66,12 @@ fn format_color_bold(color: &str) -> String {
 }
 
 #[inline]
-fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeSymbols) -> String {
+fn format_ilsore_git(
+    data: &structs::GitOutputOptions,
+    symbols: &structs::ThemeSymbols,
+) -> Cow<'static, str> {
     if data.head_info.is_none() {
-        return "".to_string();
+        return Cow::Borrowed("");
     }
 
     let git_info = vec![
@@ -87,6 +93,7 @@ fn format_ilsore_git(data: &structs::GitOutputOptions, symbols: &structs::ThemeS
         format_color("magenta"),
         git_info.join(" ")
     )
+    .into()
 }
 
 #[inline]

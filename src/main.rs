@@ -1,5 +1,6 @@
 use clap::Parser;
 use error::MapLog;
+use std::borrow::Cow;
 use std::thread;
 
 mod args;
@@ -27,17 +28,16 @@ fn main() -> error::Result<()> {
 }
 
 fn theme_data(args: &args::Args) -> structs::ThemeData {
-    let mut mut_hostname: Option<Option<String>> = Some(None);
-    let mut git_info: Option<Option<structs::GitOutputOptions>> = Some(None); // TODO: Option in
-                                                                              // Option may be just
-                                                                              // option
+    let mut mut_hostname: Option<String> = None;
+    let mut git_info: Option<structs::GitOutputOptions> = None;
 
     let fast_hostname = args
         .static_hostname
-        .clone() // TODO: Clone
-        .or_else(|| std::env::var("HOST").ok_or_log()) // zsh and tcsh
-        .or_else(|| std::env::var("HOSTNAME").ok_or_log()) // bash
-        .or_else(|| std::env::var("COMPUTERNAME").ok_or_log()); // windows
+        .as_ref()
+        .map(Cow::from)
+        .or_else(|| std::env::var("HOST").map(Cow::from).ok_or_log()) // zsh and tcsh
+        .or_else(|| std::env::var("HOSTNAME").map(Cow::from).ok_or_log()) // bash
+        .or_else(|| std::env::var("COMPUTERNAME").map(Cow::from).ok_or_log()); // windows
 
     let git_info_options = structs::GetGitInfoOptions {
         start_folder: &args.git_start_folder,
@@ -53,22 +53,19 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
         thread::scope(|s| {
             s.spawn(|| {
                 if fast_hostname.is_none() {
-                    let _ = mut_hostname.insert(user_host::hostname());
+                    mut_hostname = user_host::hostname();
                 }
             });
 
             s.spawn(|| {
                 if !args.disable_git {
-                    let _ = git_info
-                        .insert(git_utils::process_current_dir(&git_info_options).ok_or_log());
+                    git_info = git_utils::process_current_dir(&git_info_options).ok_or_log();
                 }
             });
         });
     }
-    let hostname = fast_hostname
-        .as_ref()
-        .or(mut_hostname.flatten().as_ref())
-        .cloned();
+
+    let hostname: Option<String> = fast_hostname.map(|s| s.to_string()).or(mut_hostname);
 
     structs::ThemeData {
         last_exit_status: args.last_exit_status,
@@ -76,6 +73,6 @@ fn theme_data(args: &args::Args) -> structs::ThemeData {
         hostname,
         username: user_host::username(),
         python: python_status::python_info(),
-        git: git_info.flatten(),
+        git: git_info,
     }
 }

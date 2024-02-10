@@ -47,9 +47,9 @@ fn process_repo(
 ) -> Result<structs::GitOutputOptions> {
     let options = configuration_overrided(path, input_options)?;
 
-    let mut head_info_result: Option<Option<structs::GitHeadInfo>> = Some(None);
-    let mut branch_ahead_behind_result: Option<Option<structs::GitBranchAheadBehind>> = Some(None);
-    let mut file_status_result: Option<Option<structs::GitFileStatus>> = Some(None);
+    let mut head_info_result: Option<structs::GitHeadInfo> = None;
+    let mut branch_ahead_behind_result: Option<structs::GitBranchAheadBehind> = None;
+    let mut file_status_result: Option<structs::GitFileStatus> = None;
 
     thread::scope(|s| {
         s.spawn(|| {
@@ -68,8 +68,8 @@ fn process_repo(
                 }),
             };
 
-            let _ = branch_ahead_behind_result.insert(ahead_behind);
-            let _ = head_info_result.insert(head_info_internal.map(|h| h.into()));
+            branch_ahead_behind_result = ahead_behind;
+            head_info_result = head_info_internal.map(|h| h.into());
         });
 
         s.spawn(|| {
@@ -78,14 +78,14 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let _ = file_status_result.insert(file_status(&repo, &options).ok_or_log());
+            file_status_result = file_status(&repo, &options).ok_or_log();
         });
     });
 
     Ok(structs::GitOutputOptions {
-        head_info: head_info_result.flatten(),
-        file_status: file_status_result.flatten(),
-        branch_ahead_behind: branch_ahead_behind_result.flatten(),
+        head_info: head_info_result,
+        file_status: file_status_result,
+        branch_ahead_behind: branch_ahead_behind_result,
     })
 }
 
@@ -106,7 +106,6 @@ struct GetGitInfoOptionsInternal {
 }
 
 impl From<GitHeadInfoInternal> for structs::GitHeadInfo {
-    // TODO: why From, not Into?
     fn from(val: GitHeadInfoInternal) -> Self {
         let reference_short = val
             .reference_name
