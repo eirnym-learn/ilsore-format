@@ -68,8 +68,8 @@ fn process_repo(
                 }),
             };
 
-            let _ = branch_ahead_behind_result = ahead_behind;
-            let _ = head_info_result = head_info_internal.map(|h| h.into());
+            branch_ahead_behind_result = ahead_behind;
+            head_info_result = head_info_internal.map(|h| h.into());
         });
 
         s.spawn(|| {
@@ -78,7 +78,7 @@ fn process_repo(
                 return;
             };
             let repo = repo_option.unwrap();
-            let _ = file_status_result = file_status(&repo, &options).ok_or_log();
+            file_status_result = file_status(&repo, &options).ok_or_log();
         });
     });
 
